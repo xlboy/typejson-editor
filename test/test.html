@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <iframe id="nodebox-iframe" style="display: none;"></iframe>
+
+  <script type="module">
+    import { Nodebox } from "https://cdn.jsdelivr.net/npm/@codesandbox/nodebox@0.1.9/+esm"
+    const nodebox = new Nodebox({
+      iframe: document.getElementById('nodebox-iframe'),
+    });
+    await nodebox.connect()
+    let pkgJson = {
+      dependencies: {
+        lodash: '*',
+      }
+    }
+    await nodebox.fs.init({
+      'package.json': JSON.stringify(pkgJson),
+      'file.js': `
+        import { sum } from 'lodash';
+        import { a } from './test';
+        try {
+          console.log(sum([1, 2, 3, a]));
+        } catch (error) {
+          console.log(error.message)
+        }
+      `,
+      'test.js': `
+        export const a = 1;
+      `
+    });
+    const shell = nodebox.shell.create();
+    shell.stdout.on('data', (data) => {
+      console.log('Output:', data);
+    });
+    shell.stderr.on('data', (data) => {
+      console.log('Error:', data);
+    });
+    const nextProcess = await shell.runCommand('node', ['file.js']);
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,18 @@
+{
+  "name": "@typejson-editor/editor",
+  "version": "0.1.0-alpha.1",
+  "description": "TypeJSON Editor",
+  "scripts": {},
+  "main": "./src/index.ts",
+  "peerDependencies": {
+    "monaco-editor": "^0.52.0",
+    "react": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@typescript/ata": "^0.9.7",
+    "foxact": "^0.2.38",
+    "usehooks-ts": "^3.1.0"
+  }
+}

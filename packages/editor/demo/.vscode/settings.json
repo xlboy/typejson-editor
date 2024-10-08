@@ -1,0 +1,5 @@
+{
+  "twind-intellisense.presets": [
+    "phoenix-tailwind@3.4"
+  ]
+}

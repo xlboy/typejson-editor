@@ -1,0 +1,14 @@
+{
+  "name": "@typejson-editor/runner",
+  "version": "0.1.0-alpha.1",
+  "description": "TypeJSON Runner",
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {},
+  "devDependencies": {
+    "@codesandbox/nodebox": "^0.1.9",
+    "es-module-lexer": "^1.5.4",
+    "nodebox": "^0.0.1",
+    "sucrase": "^3.35.0"
+  }
+}
