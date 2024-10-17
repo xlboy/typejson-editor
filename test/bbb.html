@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/vim-monaco@1.0.3/dist/vim-monaco.umd.js"></script> -->
+</head>
+
+<body>
+  <div id="editor" style="width: 100%; height: 100vh;"></div>
+  <script type="module">
+    import monacoEditorloader from 'https://cdn.jsdelivr.net/npm/@monaco-editor/loader@1.4.0/+esm'
+    // import vimMonaco from 'https://cdn.jsdelivr.net/npm/vim-monaco@1.0.3/+esm'
+
+    monacoEditorloader.init().then(async monaco => {
+      window.monaco = monaco
+
+      require.config({
+        paths: { 'vim-monaco': 'https://cdn.jsdelivr.net/npm/vim-monaco@1.0.3/dist/vim-monaco.umd' }
+      });
+      require(['vim-monaco'], function ({ VimMode }) {
+        const editor = monaco.editor.create(document.getElementById('editor'), {
+          value: '{"a": 1}',
+          language: 'json',
+        });
+
+        const vim = new VimMode(editor);
+        vim.enable();
+      });
+      // 如何加载 umd 文件使用呢？ https://cdn.jsdelivr.net/npm/vim-monaco@1.0.3/dist/vim-monaco.umd.js
+
+
+
+      // const editor = monaco.editor.create(document.getElementById('editor'), {
+      //   value: '{"a": 1}',
+      //   language: 'json'
+      // })
+      // const { VimMode } = await import('https://cdn.jsdelivr.net/npm/vim-monaco@1.0.3/+esm')
+      // const vim = new VimMode(editor);
+      // vim.enable();
+    })
+
+  </script>
+</body>
+
+</html>

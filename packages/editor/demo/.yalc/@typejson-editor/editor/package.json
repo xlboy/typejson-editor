@@ -1,0 +1,24 @@
+{
+  "name": "@typejson-editor/editor",
+  "version": "0.1.0-alpha.3",
+  "description": "TypeJSON Editor",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "peerDependencies": {
+    "@types/react": "^18.3.3",
+    "monaco-editor": "^0.52.0",
+    "react": "^18.3.1"
+  },
+  "yalcSig": "8ca77cd77b39d2e03c53f3a56dc10178"
+}

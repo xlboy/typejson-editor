@@ -1,0 +1,18 @@
+diff --git a/package.json b/package.json
+index 17592cd2ef0c117baf487d8f56b256de30fcd8c3..c9052ed75d34df97f0a091fcdbb717f2550ea05b 100644
+--- a/package.json
++++ b/package.json
+@@ -8,7 +8,12 @@
+     "vim"
+   ],
+   "source": "src/index.ts",
+-  "exports": "./dist/vim-monaco.modern.js",
++  "exports": {
++    ".": {
++      "default": "./dist/vim-monaco.modern.js",
++      "types": "./dist/index.d.ts"
++    }
++  },
+   "types": "./dist/index.d.ts",
+   "main": "dist/vim-monaco.cjs",
+   "module": "dist/vim-monaco.module.js",

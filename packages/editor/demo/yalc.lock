@@ -1,0 +1,9 @@
+{
+  "version": "v1",
+  "packages": {
+    "@typejson-editor/editor": {
+      "signature": "8ca77cd77b39d2e03c53f3a56dc10178",
+      "file": true
+    }
+  }
+}

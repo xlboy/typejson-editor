@@ -1,0 +1,40 @@
+{
+  "name": "@typejson-editor/editor",
+  "version": "0.1.0-alpha.3",
+  "description": "TypeJSON Editor",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest",
+    "publish:yalc": "pnpm build && tsx scripts/publish --yalc",
+    "publish:npm": "pnpm build && tsx scripts/publish --npm"
+  },
+  "peerDependencies": {
+    "@types/react": "^18.3.3",
+    "monaco-editor": "^0.52.0",
+    "react": "^18.3.1"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@types/requirejs": "^2.1.37",
+    "@typescript/ata": "^0.9.7",
+    "foxact": "^0.2.38",
+    "usehooks-ts": "^3.1.0",
+    "vim-monaco": "^1.0.3",
+    "vite-plugin-dts": "^4.2.3"
+  }
+}

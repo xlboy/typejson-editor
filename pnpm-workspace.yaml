@@ -1,0 +1,4 @@
+packages:
+  - 'packages/*'
+  - 'packages/editor/demo'
+  - 'website'
