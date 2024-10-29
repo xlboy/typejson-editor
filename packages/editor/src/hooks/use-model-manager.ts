@@ -89,7 +89,9 @@ export function useModelManager(deps: {
     update(path, fileSource) {
       const found = models.current.get(path);
       if (found) {
-        found.model.setValue(fileSource.content);
+        if (found.model.getValue() !== fileSource.content) {
+          found.model.setValue(fileSource.content);
+        }
         found.readOnly = fileSource.readOnly || false;
       }
     },
@@ -97,7 +99,9 @@ export function useModelManager(deps: {
       for (const [path, fileSource] of files) {
         const found = models.current.get(path);
         if (found) {
-          found.model.setValue(fileSource.content);
+          if (found.model.getValue() !== fileSource.content) {
+            found.model.setValue(fileSource.content);
+          }
           found.readOnly = fileSource.readOnly || false;
         } else {
           this.add(path, fileSource);

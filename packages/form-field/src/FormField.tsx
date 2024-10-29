@@ -126,8 +126,12 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
 
   useEventListener(
     'focusout',
-    () => {
-      if (onChangeMode === 'blur') triggerChange();
+    ({ relatedTarget }) => {
+      setTimeout(() => {
+        if (rootDOMRef.current?.contains(relatedTarget as Node) || rootDOMRef.current?.contains(document.activeElement))
+          return;
+        if (onChangeMode === 'blur') triggerChange();
+      }, 100);
     },
     rootDOMRef,
   );
@@ -182,7 +186,7 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
     .flat(1);
 
   return (
-    <div ref={rootDOMRef} style={{ position: 'relative' }}>
+    <div ref={rootDOMRef} id="test" tabIndex={1} style={{ position: 'relative' }}>
       {running && <RunLoading />}
       <TypeJsonEditor
         {...editorProps}

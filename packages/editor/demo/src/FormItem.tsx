@@ -52,7 +52,7 @@ export default function FormItem() {
           <TypeJsonEditorFormField
             editorProps={{
               monaco,
-              plugins: { typeAcquisition: { enabled: true } },
+              plugins: { typeAcquisition: { enabled: true }, vim: { enabled: false } },
               styles: {
                 minHeight: 300,
                 boxShadow: '0px 0px 0px 1px #000000',
