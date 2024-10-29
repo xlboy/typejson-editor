@@ -8,13 +8,13 @@ export interface TypeJsonEditorFormFieldValue<Result = unknown> {
    *
    * @description 包含多个 `TypeJsonFile` 文件内容的压缩字符串
    * @example
-   * import { compress } from 'some-compression-library';
+   * import { compressToBase64 } from 'lz-string';
    *
    * const files: TypeJsonFile[] = [
    *   { name: 'index.ts', content: 'export default Math.abs(-1);' },
    *   // ... 其他文件
    * ];
-   * source === compress(JSON.stringify(files))
+   * source === compressToBase64(JSON.stringify(files))
    */
   source: CompressedJsonString;
   /**
@@ -23,8 +23,7 @@ export interface TypeJsonEditorFormFieldValue<Result = unknown> {
    * @example
    * // 假设 index.ts 的内容如下：
    * export default Math.abs(-1);
-   * // 则 result 的值为：
-   * // result === 1
+   * // 则 result 的值为 1
    */
   result: Result;
 }

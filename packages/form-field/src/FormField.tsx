@@ -8,12 +8,7 @@ import {
 import { TypeJsonRunner } from '../../runner/src';
 import Alert from './components/Alert';
 import RunLoading from './components/RunLoading';
-import type {
-  TypeJsonEditorFormFieldActionAPI,
-  TypeJsonEditorFormFieldProps,
-  TypeJsonEditorFormFieldValue,
-  ValidationDetails,
-} from './types';
+import type { TypeJsonEditorFormFieldActionAPI, TypeJsonEditorFormFieldProps, ValidationDetails } from './types';
 import { jsonCompressor } from './utils';
 import { merge } from 'lodash-es';
 import { memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
@@ -196,7 +191,7 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
         validationRef={editorValidationRef}
         onActiveFileContentChange={onActiveFileContentChange}
       />
-      {displayErrorMap.size > 0 && <Alert errors={alertErrors} />}
+      {alertErrors.length > 0 && <Alert errors={alertErrors} />}
     </div>
   );
 }

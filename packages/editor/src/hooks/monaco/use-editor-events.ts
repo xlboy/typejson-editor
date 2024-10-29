@@ -1,3 +1,4 @@
+import { normalizePath } from '../../utils';
 import { FileManagerAPI } from '../use-file-manager';
 import { ModelManagerAPI } from '../use-model-manager';
 import { useSingleton } from 'foxact/use-singleton';
@@ -25,14 +26,14 @@ export function useMonacoEditorEvents(deps: {
   function initEditorEvents() {
     const opener = monaco.editor.registerEditorOpener({
       openCodeEditor(source, resource, selectionOrPosition) {
-        const filePath = resource.path.replace(/^\//, '');
-        const file = fileManager.get(filePath);
+        const normalizedPath = normalizePath(resource.path);
+        const file = fileManager.get(normalizedPath);
         if (file) {
           if (file.isExternal) {
-            const model = modelManager.get(file.path);
+            const model = modelManager.get(normalizedPath);
             if (model) monaco.editor.setModelLanguage(model, 'typescript');
           }
-          modelManager.setActive(file.path);
+          modelManager.setActive(normalizedPath);
           if (selectionOrPosition) {
             editorRef.current?.setSelection(selectionOrPosition as any);
           }
