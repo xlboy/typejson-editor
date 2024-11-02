@@ -1,20 +1,33 @@
 import type { TypeJsonEditorProps, TypeJsonFile } from '@typejson-editor/editor';
 
+/**
+ * @example
+ * import { compressToBase64 } from 'lz-string';
+ *
+ * const files = [
+ *   { name: 'index.ts', content: 'export default Math.abs(-1);' },
+ * ];
+ * result = compressToBase64(JSON.stringify(files))
+ */
 type CompressedJsonString = string;
 
 export interface TypeJsonEditorFormFieldValue<Result = unknown> {
   /**
-   * 压缩的 `TypeJsonFile[]` 文件源
+   * 预设文件源（压缩格式的 `TypeJsonFile[]`）
    *
-   * @description 包含多个 `TypeJsonFile` 文件内容的压缩字符串
-   * @example
-   * import { compressToBase64 } from 'lz-string';
+   * 用于存放配置所需的依赖文件，如：
+   * - 类型定义文件
+   * - 工具函数
+   * - 其他辅助代码
+   */
+  preset?: CompressedJsonString;
+  /**
+   * 用户编辑的文件源（压缩格式的 `TypeJsonFile[]`）
    *
-   * const files: TypeJsonFile[] = [
-   *   { name: 'index.ts', content: 'export default Math.abs(-1);' },
-   *   // ... 其他文件
-   * ];
-   * source === compressToBase64(JSON.stringify(files))
+   * 存放实际需要编辑的代码内容
+   * 
+   * @default
+   * [{ path: '/index.ts', content: '' }]
    */
   source: CompressedJsonString;
   /**
@@ -45,6 +58,7 @@ export type ValidationDetails =
   | { type: 'success' }
   | { type: 'warning:running' }
   | { type: 'error:run-failure'; error: Error }
+  | { type: 'error:runner-init-failure'; error: Error }
   | { type: 'error:type-check-failure'; errors: string[] }
   | { type: 'error:syntactic-check-failure'; errors: string[] };
 

@@ -7,6 +7,7 @@ import type { PackageJson } from 'type-fest';
 export class TypeJsonRunner {
   private nodebox?: Nodebox;
   private options: Required<TypeJsonRunnerOptions>;
+  initialized = false;
 
   private readonly config = {
     runtimeId: Math.random().toString(36).substring(2, 15),
@@ -19,7 +20,6 @@ export class TypeJsonRunner {
       } satisfies Partial<TypeJsonRunnerOptions>,
       _options,
     ) as any;
-    this.init();
   }
 
   async setFiles(files: Array<TypeJsonFile>) {
@@ -93,7 +93,9 @@ export class TypeJsonRunner {
     this.nodebox = undefined;
   }
 
-  private async init() {
+  async init() {
+    if (this.initialized) return;
+
     const ctx = this;
 
     initNodeboxIframe();
@@ -110,6 +112,10 @@ export class TypeJsonRunner {
         `,
       });
     }
+
+    this.initialized = true;
+
+    return;
 
     async function initNodeboxConnect() {
       const iframeEl = document.getElementById(ctx.options.nodeboxIframeId) as HTMLIFrameElement | undefined;

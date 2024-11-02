@@ -17,24 +17,26 @@ loader.config({
 });
 
 export default function FormItem() {
-  const [monaco, setMonaco] = useState<typeof Monaco | null>(null);
   const fileRef = useRef<TypeJsonEditorFileAPI>(null);
   const validationRef = useRef<TypeJsonEditorValidationAPI>(null);
   const runnerInstanceRef = useRef<TypeJsonRunner | null>(null);
   const actionRef = useRef<TypeJsonEditorFormFieldActionAPI>(null);
   const [formInstance] = useForm();
 
+  const [monaco, setMonaco] = useState<typeof Monaco | null>(null);
   useMount(() => {
     loader.init().then(monaco => {
       setMonaco(monaco);
     });
     runnerInstanceRef.current = new TypeJsonRunner();
   });
-
   if (!monaco) return 'Monaco loading...';
 
   return (
-    <div className={tx`size-[500px]`}>
+    <div
+      // className={tx`size-[500px]`}
+      style={{ height: 500, width: 500 }}
+    >
       <Form
         form={formInstance}
         onValuesChange={values => {

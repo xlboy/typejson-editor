@@ -1,6 +1,6 @@
 import { compressToBase64, decompressFromBase64 } from 'lz-string';
 
-export const jsonCompressor = {
+export const lzJsonCompressor = {
   compress: <T extends object>(json: T): string => {
     return compressToBase64(JSON.stringify(json));
   },

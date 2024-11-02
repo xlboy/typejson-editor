@@ -1,6 +1,6 @@
 import Editor from './Editor';
 import FormItem from './FormItem';
-import './libs/twind';
+// import './libs/twind';
 import { createRoot } from 'react-dom/client';
 
 // createRoot(document.getElementById('root')!).render(<Editor />);
