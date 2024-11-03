@@ -46,10 +46,8 @@ export interface TypeJsonEditorFileAPI {
   setActive: (path: string) => void;
   get: (path: string) => [TypeJsonFile, Monaco.editor.ITextModel] | null;
   getAll: () => [TypeJsonFile, Monaco.editor.ITextModel][];
-  update: (file: TypeJsonFile) => void;
+  updateOrAdd: (file: TypeJsonFile) => void;
   updateOrAddMultiple: (files: TypeJsonFile[]) => void;
-  add: (file: TypeJsonFile, isActive?: boolean) => void;
-  addMultiple: (files: TypeJsonFile[]) => void;
   remove: (path: string) => void;
   clear: () => void;
 }
@@ -67,9 +65,7 @@ export interface TypeJsonEditorValidationAPI {
 export interface TypeJsonFile {
   /**
    * @example
-   * '/file.ts';
-   * './file.ts';
-   * 'file.ts'
+   * '/file.ts'
    */
   path: string;
   content: string;

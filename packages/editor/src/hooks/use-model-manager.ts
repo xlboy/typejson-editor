@@ -1,19 +1,26 @@
-import { NormalizedPath, TypeJsonFile } from '../types';
-import { useSingleton } from 'foxact/use-singleton';
+import type { TypeJsonFile } from '../types';
 import type * as Monaco from 'monaco-editor';
 
 export interface ModelManagerAPI {
   clear(): void;
-  setActive(path: NormalizedPath): void;
-  add(path: NormalizedPath, file: TypeJsonFile): void;
-  addMultiple(files: Array<Readonly<[path: NormalizedPath, file: TypeJsonFile]>>): void;
-  /** eg: `node_modules/@types/react/index.d.ts` */
-  addExtraLib(path: NormalizedPath, libModel: Monaco.editor.ITextModel): void;
-  remove(path: NormalizedPath): void;
-  getAll(): Record<NormalizedPath, Monaco.editor.ITextModel>;
-  get(path: NormalizedPath): Monaco.editor.ITextModel | undefined;
-  update(path: NormalizedPath, fileSource: TypeJsonFile): void;
-  updateMultiple(files: Array<Readonly<[path: NormalizedPath, fileSource: TypeJsonFile]>>): void;
+  getActive(): Monaco.editor.ITextModel | null;
+  setActive(path: string): void;
+  remove(path: string): void;
+  getAll(): Monaco.editor.ITextModel[];
+  get(path: string): Monaco.editor.ITextModel | null;
+  updateOrAdd(file: TypeJsonFile): void;
+  updateOrAddMultiple(files: TypeJsonFile[]): void;
+}
+
+declare module 'monaco-editor' {
+  namespace editor {
+    interface ITextModel {
+      metadata?: {
+        readOnly: boolean;
+        isExternal?: boolean;
+      };
+    }
+  }
 }
 
 const helpers = {
@@ -38,75 +45,54 @@ export function useModelManager(deps: {
 }): ModelManagerAPI {
   const { monaco, editorRef } = deps;
 
-  const models = useSingleton(() => new Map<NormalizedPath, { model: Monaco.editor.ITextModel; readOnly: boolean }>());
+  const getMonacoUri = (path: string) => monaco.Uri.parse(new URL(path, 'file:///').href);
 
   return {
     clear() {
-      models.current.forEach(({ model }) => model.dispose());
-      models.current.clear();
+      monaco.editor.getModels().forEach(model => model.dispose());
+    },
+    getActive() {
+      return editorRef.current?.getModel() || null;
     },
     setActive(path) {
-      const found = models.current.get(path);
-      if (found) {
-        editorRef.current?.setModel(found.model);
-        editorRef.current?.updateOptions({ readOnly: found.readOnly });
+      const model = this.get(path);
+      if (model) {
+        editorRef.current?.setModel(model);
+        editorRef.current?.updateOptions({ readOnly: model.metadata?.readOnly || false });
       }
     },
     get(path) {
-      return models.current.get(path)?.model;
-    },
-    add(path, fileSource) {
-      const fileExtension = path.split('.').pop()?.toLowerCase() || '';
-      // 这里如果用 typescript 会令 TS Server 崩溃...所以采用 javascript（具体原因与这些 extraLib 有关）
-      const languageId = fileSource.isExternal ? 'javascript' : helpers.getLanguageIdFromExtension(fileExtension);
-
-      const uri = monaco.Uri.parse(new URL(path, 'file:///').href);
-      const model = monaco.editor.createModel(fileSource.content, languageId, uri);
-      models.current.set(path, { model, readOnly: fileSource.readOnly || false });
-    },
-    addExtraLib(path, libModel) {
-      models.current.set(path, { model: libModel, readOnly: true });
-    },
-    addMultiple(files) {
-      for (const [path, fileSource] of files) {
-        this.add(path, fileSource);
-      }
+      return monaco.editor.getModel(getMonacoUri(path));
     },
     remove(path) {
-      const found = models.current.get(path);
-      if (found) {
-        found.model.dispose();
-        models.current.delete(path);
-      }
+      this.get(path)?.dispose();
     },
     getAll() {
-      const result: Record<NormalizedPath, Monaco.editor.ITextModel> = {};
-      models.current.forEach(({ model }, path) => {
-        result[path] = model;
-      });
-      return result;
+      return monaco.editor.getModels();
     },
-    update(path, fileSource) {
-      const found = models.current.get(path);
-      if (found) {
-        if (found.model.getValue() !== fileSource.content) {
-          found.model.setValue(fileSource.content);
+    updateOrAdd(file) {
+      const model = this.get(file.path);
+      if (model) {
+        if (model.getValue() !== file.content) {
+          model.setValue(file.content);
         }
-        found.readOnly = fileSource.readOnly || false;
+        model.metadata = {
+          readOnly: file.readOnly || false,
+          isExternal: file.isExternal || false,
+        };
+      } else {
+        const fileExtension = file.path.split('.').pop()?.toLowerCase() || '';
+        // 这里如果用 typescript 会令 TS Server 崩溃...所以采用 javascript（具体原因与这些 extraLib 有关）
+        const languageId = file.isExternal ? 'javascript' : helpers.getLanguageIdFromExtension(fileExtension);
+        const model = monaco.editor.createModel(file.content, languageId, getMonacoUri(file.path));
+        model.metadata = {
+          readOnly: file.readOnly || false,
+          isExternal: file.isExternal || false,
+        };
       }
     },
-    updateMultiple(files) {
-      for (const [path, fileSource] of files) {
-        const found = models.current.get(path);
-        if (found) {
-          if (found.model.getValue() !== fileSource.content) {
-            found.model.setValue(fileSource.content);
-          }
-          found.readOnly = fileSource.readOnly || false;
-        } else {
-          this.add(path, fileSource);
-        }
-      }
+    updateOrAddMultiple(files) {
+      for (const file of files) this.updateOrAdd(file);
     },
   };
 }

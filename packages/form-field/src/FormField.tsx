@@ -66,7 +66,7 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
   const actionRef = props.actionRef || defaultActionRef;
 
   const [running, setRunning] = useState(false);
-  const [loadingTextSet, loadingTextActions] = useSet<'Running...' | 'Runner loading...'>();
+  const [loadingTextSet, loadingTextActions] = useSet<'Running...' | 'Runner initializing...'>();
 
   type DisplayError = ValidationDetails & { type: `${string}:${string}` };
   const [displayErrorMap, displayErrorActions] = useMap<DisplayError['type'], Omit<DisplayError, 'type'>>();
@@ -185,20 +185,20 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
       editorFileRef.current?.updateOrAddMultiple(sourceFiles);
       editorFileRef.current?.updateOrAddMultiple(presetFiles);
     } else {
-      editorFileRef.current?.addMultiple(sourceFiles);
-      editorFileRef.current?.addMultiple(presetFiles);
+      editorFileRef.current?.updateOrAddMultiple(sourceFiles);
+      editorFileRef.current?.updateOrAddMultiple(presetFiles);
       editorFileRef.current?.setActive(initialActiveFile);
 
       const runner = new TypeJsonRunner({ files: sourceFiles });
       runnerRef.current = runner;
-      loadingTextActions.add('Runner loading...');
+      loadingTextActions.add('Runner initializing...');
       runner
         .init()
         .catch(error => {
           displayErrorActions.set('error:runner-init-failure', { error });
         })
         .finally(() => {
-          loadingTextActions.remove('Runner loading...');
+          loadingTextActions.remove('Runner initializing...');
         });
     }
   }, [value]);

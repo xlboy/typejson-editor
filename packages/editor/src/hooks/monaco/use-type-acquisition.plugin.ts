@@ -1,5 +1,3 @@
-import { normalizePath } from '../../utils';
-import { FileManagerAPI } from '../use-file-manager';
 import { ModelManagerAPI } from '../use-model-manager';
 import { setupTypeAcquisition } from '@typescript/ata';
 import type * as Monaco from 'monaco-editor';
@@ -30,11 +28,10 @@ export function useTypeAcquisitionMonacoPlugin(
   deps: {
     monaco: typeof Monaco;
     modelManager: ModelManagerAPI;
-    fileManager: FileManagerAPI;
   },
   options: TypeAcquisitionMonacoPluginOptions,
 ) {
-  const { monaco, modelManager, fileManager } = deps;
+  const { monaco, modelManager } = deps;
 
   const pluginRef = useRef<ReturnType<typeof setupTypeAcquisition>>();
   const unloadedContentsRef = useRef<string[]>([]);
@@ -58,10 +55,12 @@ export function useTypeAcquisitionMonacoPlugin(
                 monaco.languages.typescript.typescriptDefaults.addExtraLib(code, `file://${path}`);
                 const uri = monaco.Uri.file(path);
                 if (monaco.editor.getModel(uri) === null) {
-                  const normalizedPath = normalizePath(path);
-                  const fileSource = { path, content: code, readOnly: true, isExternal: true };
-                  modelManager.add(normalizedPath, fileSource);
-                  fileManager.add(normalizedPath, fileSource, false);
+                  modelManager.updateOrAdd({
+                    path,
+                    content: code,
+                    readOnly: true,
+                    isExternal: true,
+                  });
                 }
               },
               progress: (downloaded: number, total: number) => {

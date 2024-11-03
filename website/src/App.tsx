@@ -1,3 +1,4 @@
+import NavigationBar from './components/NavigationBar';
 import { tx } from '@twind/core';
 import {
   DockviewReact,
@@ -9,6 +10,7 @@ import {
   LayoutPriority,
   Orientation,
 } from 'dockview';
+import 'dockview/dist/styles/dockview.css';
 import { useRef } from 'react';
 
 const dockComponents = {
@@ -41,42 +43,48 @@ const gridComponents = {
   },
 } satisfies Record<string, React.FunctionComponent<IGridviewPanelProps>>;
 
+{
+  /* <button
+onClick={() => {
+  const fileTreePanel = gridAPI.current?.getPanel('file-tree-panel');
+  if (!fileTreePanel) return;
+  fileTreePanel.api.setVisible(!fileTreePanel.api.isVisible);
+}}
+>
+toogle file-tree
+</button> */
+}
+
 const Component = () => {
   const gridAPI = useRef<GridviewApi>();
 
   return (
-    <div className={tx`flex-grow size-full`}>
-      <button
-        onClick={() => {
-          const fileTreePanel = gridAPI.current?.getPanel('file-tree-panel');
-          if (!fileTreePanel) return;
-          fileTreePanel.api.setVisible(!fileTreePanel.api.isVisible);
-        }}
-      >
-        toogle file-tree
-      </button>
-      <GridviewReact
-        className="dockview-theme-abyss"
-        onReady={event => {
-          gridAPI.current = event.api;
-          event.api.addPanel({
-            id: 'editor-panel',
-            component: 'dockview',
-          });
-          event.api.addPanel({
-            id: 'file-tree-panel',
-            component: 'fileTree',
-            position: {
-              direction: 'left',
-              referencePanel: 'editor-panel',
-            },
-            size: 300,
-            minimumWidth: 200,
-          });
-        }}
-        components={gridComponents}
-        orientation={Orientation.VERTICAL}
-      />
+    <div className={tx`w-full h-dvh flex(& col)`}>
+      <NavigationBar />
+      <div className={tx`flex-1`}>
+        <GridviewReact
+          className="dockview-theme-abyss"
+          onReady={event => {
+            gridAPI.current = event.api;
+            event.api.addPanel({
+              id: 'editor-panel',
+              component: 'dockview',
+            });
+            event.api.addPanel({
+              id: 'file-tree-panel',
+              component: 'fileTree',
+              position: {
+                direction: 'left',
+                referencePanel: 'editor-panel',
+              },
+              size: 300,
+              minimumWidth: 200,
+            });
+          }}
+          components={gridComponents}
+          orientation={Orientation.VERTICAL}
+        />
+      </div>
     </div>
   );
 };

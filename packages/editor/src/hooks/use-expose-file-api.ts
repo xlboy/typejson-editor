@@ -1,74 +1,55 @@
-import { type TypeJsonEditorFileAPI } from '../types';
-import { normalizePath } from '../utils';
-import { type FileManagerAPI } from './use-file-manager';
+import { type TypeJsonEditorFileAPI, type TypeJsonFile } from '../types';
 import { type ModelManagerAPI } from './use-model-manager';
+import * as Monaco from 'monaco-editor';
 import { useImperativeHandle } from 'react';
 
 export function useExposeFileAPI(
   fileRef: React.RefObject<TypeJsonEditorFileAPI>,
   deps: {
     modelManager: ModelManagerAPI;
-    fileManager: FileManagerAPI;
   },
 ) {
-  const { modelManager, fileManager } = deps;
+  const { modelManager } = deps;
+
+  const getTypeJsonFile = (model: Monaco.editor.ITextModel) =>
+    ({
+      path: model.uri.path,
+      content: model.getValue(),
+      readOnly: model.metadata?.readOnly || false,
+      isExternal: model.metadata?.isExternal || false,
+    }) satisfies TypeJsonFile;
 
   useImperativeHandle(
     fileRef,
     () =>
       ({
-        add(file, isActive = false) {
-          const normalizedPath = normalizePath(file.path);
-          fileManager.add(normalizedPath, file, isActive);
-          modelManager.add(normalizedPath, file);
+        updateOrAdd(file) {
+          modelManager.updateOrAdd(file);
         },
-        addMultiple(files) {
-          const normalizeFiles = files.map(f => [normalizePath(f.path), f] as const);
-          fileManager.addMultiple(normalizeFiles);
-          modelManager.addMultiple(normalizeFiles);
+        updateOrAddMultiple(files) {
+          modelManager.updateOrAddMultiple(files);
         },
         clear() {
-          fileManager.clear();
           modelManager.clear();
         },
         get(path) {
-          const normalizedPath = normalizePath(path);
-          const file = fileManager.get(normalizedPath);
-          const model = modelManager.get(normalizedPath);
-          return file && model ? [file, model] : null;
+          const model = modelManager.get(path);
+          if (!model) return null;
+          return [getTypeJsonFile(model), model];
         },
         getActive() {
-          const file = fileManager.getActive();
-          if (!file) return null;
-          const model = modelManager.get(file.path);
+          const model = modelManager.getActive();
           if (!model) return null;
-          return [file, model];
+          return [getTypeJsonFile(model), model];
         },
         getAll() {
-          return fileManager
-            .getAll()
-            .map(([path, file]) => [file, modelManager.get(path)])
-            .filter(([, model]) => Boolean(model)) as any;
+          return modelManager.getAll().map(model => [getTypeJsonFile(model), model]);
         },
         remove(path) {
-          const normalizedPath = normalizePath(path);
-          fileManager.remove(normalizedPath);
-          modelManager.remove(normalizedPath);
+          modelManager.remove(path);
         },
         setActive(path) {
-          const normalizedPath = normalizePath(path);
-          fileManager.setActive(normalizedPath);
-          modelManager.setActive(normalizedPath);
-        },
-        update(file) {
-          const normalizedPath = normalizePath(file.path);
-          fileManager.update(normalizedPath, file);
-          modelManager.update(normalizedPath, file);
-        },
-        updateOrAddMultiple(files) {
-          const normalizeFiles = files.map(f => [normalizePath(f.path), f] as const);
-          fileManager.updateMultiple(normalizeFiles);
-          modelManager.updateMultiple(normalizeFiles);
+          modelManager.setActive(path);
         },
       }) satisfies TypeJsonEditorFileAPI,
   );

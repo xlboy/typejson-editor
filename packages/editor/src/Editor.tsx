@@ -5,10 +5,8 @@ import { useTypeAcquisitionMonacoPlugin } from './hooks/monaco/use-type-acquisit
 import { useVimMonacoPlugin } from './hooks/monaco/use-vim.plugin';
 import { useExposeFileAPI } from './hooks/use-expose-file-api';
 import { useExposeValidationAPI } from './hooks/use-expose-validation-api';
-import { useFileManager } from './hooks/use-file-manager';
 import { useModelManager } from './hooks/use-model-manager';
 import { TypeJsonEditorFileAPI, TypeJsonEditorProps, TypeJsonEditorValidationAPI } from './types';
-import { normalizePath } from './utils';
 import type * as Monaco from 'monaco-editor';
 import { memo, useEffect, useRef } from 'react';
 import { useDebounceCallback } from 'usehooks-ts';
@@ -19,24 +17,24 @@ function TypeJsonEditor(props: TypeJsonEditorProps) {
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
 
   const modelManager = useModelManager({ monaco, editorRef });
-  const fileManager = useFileManager();
 
   useInitMonacoSetting(monaco);
 
   useTwoslashInlayMonacoPlugin(monaco, { enabled: props.plugins?.twoslashInlay?.enabled ?? true });
   useVimMonacoPlugin(editorRef, { enabled: props.plugins?.vim?.enabled ?? false });
   const { load: loadTypeLib } = useTypeAcquisitionMonacoPlugin(
-    { monaco, modelManager, fileManager },
+    { monaco, modelManager },
     !!props.plugins?.typeAcquisition?.enabled
       ? { enabled: true, ts: props.plugins?.typeAcquisition?.ts }
       : { enabled: false },
   );
 
-  useMonacoEditorEvents({ monaco, editorRef, fileManager, modelManager });
+  useMonacoEditorEvents({ monaco, editorRef, modelManager });
 
   const defaultFileRef = useRef<TypeJsonEditorFileAPI>(null);
   const fileRef = props.fileRef || defaultFileRef;
-  useExposeFileAPI(fileRef, { modelManager, fileManager });
+  useExposeFileAPI(fileRef, { modelManager });
+
   const defaultValidationRef = useRef<TypeJsonEditorValidationAPI>(null);
   const validationRef = props.validationRef || defaultValidationRef;
   useExposeValidationAPI(validationRef, { monaco, modelManager });
@@ -57,7 +55,7 @@ function TypeJsonEditor(props: TypeJsonEditorProps) {
       }
 
       if (props.initialFiles) {
-        fileRef.current?.addMultiple(props.initialFiles);
+        fileRef.current?.updateOrAddMultiple(props.initialFiles);
       }
 
       if (props.initialActiveFile) {
@@ -66,13 +64,9 @@ function TypeJsonEditor(props: TypeJsonEditorProps) {
 
       const disposables: Monaco.IDisposable[] = [
         editorRef.current.onDidChangeModel(e => {
-          monaco.Uri;
-          const newUrl = e.newModelUrl?.toString(true);
-          let normalizedUrl = newUrl?.replace(/^file:\/+/, '');
-          if (!normalizedUrl) return;
-          normalizedUrl = normalizePath(normalizedUrl);
-
-          fileManager.setActive(normalizedUrl);
+          const path = e.newModelUrl?.path;
+          if (!path) return;
+          modelManager.setActive(path);
 
           const activeFile = fileRef.current?.getActive();
           if (!activeFile) return;
@@ -86,16 +80,14 @@ function TypeJsonEditor(props: TypeJsonEditorProps) {
         }),
         editorRef.current.onDidChangeModelContent(e => {
           const newValue = editorRef.current?.getValue() || '';
-          fileManager.updateActiveContent(newValue);
 
-          const activeFile = fileRef.current?.getActive();
-          if (!activeFile) return;
+          const activeModel = modelManager.getActive();
+          if (!activeModel) return;
 
-          const [{ path: activeFilePath }] = activeFile;
           if (props.plugins?.typeAcquisition?.enabled) {
             debouncedLoadTypeLib(newValue);
           }
-          props.onActiveFileContentChange?.(activeFilePath, newValue);
+          props.onActiveFileContentChange?.(activeModel.uri.path, newValue);
         }),
       ];
 
