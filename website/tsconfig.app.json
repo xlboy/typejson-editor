@@ -8,6 +8,7 @@
     }
   },
   "include": [
-    "src"
-, "../packages/editor/src/libs/monaco"  ]
+    "src",
+    "../packages/editor/src/libs/monaco"
+  ]
 }

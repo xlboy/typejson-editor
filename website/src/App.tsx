@@ -1,92 +1,96 @@
+import { TypeJsonEditor } from '../../packages/editor/src';
 import NavigationBar from './components/NavigationBar';
+import { SidebarView } from './modules/sidebar';
+import { useGlobalStore } from './stores/global';
+import { MantineProvider } from '@mantine/core';
+import '@mantine/core/styles.css';
+import loader from '@monaco-editor/loader';
 import { tx } from '@twind/core';
-import {
-  DockviewReact,
-  GridviewApi,
-  GridviewReact,
-  GridviewReadyEvent,
-  IDockviewPanelProps,
-  IGridviewPanelProps,
-  LayoutPriority,
-  Orientation,
-} from 'dockview';
+import { useMount } from 'ahooks';
+import { DockviewReact, GridviewReact, IGridviewPanelProps, Orientation } from 'dockview';
 import 'dockview/dist/styles/dockview.css';
-import { useRef } from 'react';
-
-const dockComponents = {
-  editor(props) {
-    return <div>俺是编辑器</div>;
-  },
-} satisfies Record<string, React.FunctionComponent<IDockviewPanelProps>>;
 
 const gridComponents = {
-  fileTree(props) {
-    return <div className={tx`size-[100px] text-white`}>他们说你的心似乎痊愈了</div>;
-  },
-  dockview() {
+  SidebarView,
+  EditorView() {
+    const { setDockviewApi } = useGlobalStore();
+
     return (
       <DockviewReact
-        watermarkComponent={() => <div>然后呢？</div>}
-        components={dockComponents}
+        watermarkComponent={() => (
+          <div className={tx`size-full text-white flex justify-around items-center`}>
+            hi~
+          </div>
+        )}
+        components={{
+          editor(props) {
+            const { monaco } = useGlobalStore();
+            const {} = props.params as {};
+
+            return (
+              <div className={tx`size-full text-white`}>
+                <TypeJsonEditor monaco={monaco!} />
+              </div>
+            );
+          },
+        }}
         onReady={event => {
-          event.api.addPanel({
-            id: 'wcc1',
-            component: 'editor',
-          });
-          event.api.addPanel({
-            id: 'wcc2',
-            component: 'editor',
-          });
+          setDockviewApi('dock', event.api);
         }}
       />
     );
   },
 } satisfies Record<string, React.FunctionComponent<IGridviewPanelProps>>;
 
-{
-  /* <button
-onClick={() => {
-  const fileTreePanel = gridAPI.current?.getPanel('file-tree-panel');
-  if (!fileTreePanel) return;
-  fileTreePanel.api.setVisible(!fileTreePanel.api.isVisible);
-}}
->
-toogle file-tree
-</button> */
-}
+function App() {
+  const { setDockviewApi, setMonaco, monaco } = useGlobalStore();
 
-const Component = () => {
-  const gridAPI = useRef<GridviewApi>();
+  useMount(() => {
+    loader.config({
+      paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs' },
+    });
+    loader.init().then(setMonaco);
+  });
 
   return (
-    <div className={tx`w-full h-dvh flex(& col)`}>
-      <NavigationBar />
-      <div className={tx`flex-1`}>
-        <GridviewReact
-          className="dockview-theme-abyss"
-          onReady={event => {
-            gridAPI.current = event.api;
-            event.api.addPanel({
-              id: 'editor-panel',
-              component: 'dockview',
-            });
-            event.api.addPanel({
-              id: 'file-tree-panel',
-              component: 'fileTree',
-              position: {
-                direction: 'left',
-                referencePanel: 'editor-panel',
-              },
-              size: 300,
-              minimumWidth: 200,
-            });
-          }}
-          components={gridComponents}
-          orientation={Orientation.VERTICAL}
-        />
-      </div>
-    </div>
-  );
-};
+    <MantineProvider>
+      <div className={tx`w-full h-dvh flex(& col)`}>
+        <NavigationBar />
+        <div className={tx`flex-1 bg-[#121c2c]`}>
+          {monaco ? (
+            <GridviewReact
+              className="dockview-theme-abyss"
+              onReady={event => {
+                setDockviewApi('grid', event.api);
 
-export default Component;
+                event.api.addPanel({
+                  id: 'editor-panel',
+                  component: 'EditorView',
+                });
+                event.api.addPanel({
+                  id: 'sidebar-panel',
+                  component: 'SidebarView',
+                  position: {
+                    direction: 'left',
+                    referencePanel: 'editor-panel',
+                  },
+                  size: 43,
+                  minimumWidth: 43,
+                  maximumWidth: 400,
+                });
+              }}
+              components={gridComponents}
+              orientation={Orientation.VERTICAL}
+            />
+          ) : (
+            <div className={tx`size-full text-white flex justify-around items-center`}>
+              loading...
+            </div>
+          )}
+        </div>
+      </div>
+    </MantineProvider>
+  );
+}
+
+export default App;

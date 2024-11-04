@@ -45,6 +45,35 @@ function TypeJsonEditor(props: TypeJsonEditorProps) {
     if (mountedDOMRef.current) {
       editorRef.current = monaco.editor.create(mountedDOMRef.current, {
         automaticLayout: true,
+        theme: 'vs-dark',
+        minimap: { enabled: false },
+        fontSize: 14,
+        suggestFontSize: 14,
+        codeLensFontSize: 14,
+        tabIndex: 2,
+        cursorBlinking: 'smooth',
+        scrollBeyondLastLine: false,
+        hover: { enabled: true, delay: 300, sticky: true },
+        colorDecorators: true,
+        suggest: {
+          filterGraceful: true,
+          showWords: false,
+          showStatusBar: true,
+          preview: true,
+          previewMode: 'subwordSmart',
+        },
+        inlineSuggest: { enabled: true, mode: 'subwordSmart' },
+        suggestSelection: 'first',
+        acceptSuggestionOnEnter: 'smart',
+        definitionLinkOpensInPeek: true,
+        peekWidgetDefaultFocus: 'editor',
+        inlayHints: { fontSize: 12 },
+        fontFamily: 'monospace',
+        bracketPairColorization: {
+          enabled: true,
+          independentColorPoolPerBracketType: true,
+        },
+        stickyScroll: { enabled: true },
         ...props.editorOptions,
       });
 
