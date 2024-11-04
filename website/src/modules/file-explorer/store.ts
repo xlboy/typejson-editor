@@ -1,16 +1,23 @@
-import type { FileTreeNode, OriginFile } from './types';
+import { buildFileTree } from './helpers';
+import type { DirectoryNode, FileTreeNode, OriginFile } from './types';
 import { useGlobalStore } from '@/stores/global';
+import { enableMapSet } from 'immer';
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
+enableMapSet();
+
 interface FileExplorerStoreState {
   isInitialized: boolean;
+  expandedDirNodes: Set<DirectoryNode['id']>;
   originFiles: OriginFile[];
 }
 
 interface FileExplorerStoreActions {
   initialize: () => void;
   refreshOriginFiles: () => void;
+  toggleExpandedDirNode: (id: DirectoryNode['id']) => void;
 }
 
 export type FileExplorerStore = FileExplorerStoreState & FileExplorerStoreActions;
@@ -19,6 +26,7 @@ export const useFileExplorerStore = create<FileExplorerStore>()(
   immer(set => ({
     //#region  //*=========== state ===========
     isInitialized: false,
+    expandedDirNodes: new Set(),
     originFiles: [],
     //#endregion  //*======== state ===========
     //#region  //*=========== actions ===========
@@ -51,6 +59,13 @@ export const useFileExplorerStore = create<FileExplorerStore>()(
       }));
       set({ originFiles });
     },
+    toggleExpandedDirNode(id) {
+      set(state => {
+        state.expandedDirNodes.has(id)
+          ? state.expandedDirNodes.delete(id)
+          : state.expandedDirNodes.add(id);
+      });
+    },
     //#endregion  //*======== actions ===========
   })),
 );
@@ -58,7 +73,60 @@ export const useFileExplorerStore = create<FileExplorerStore>()(
 export const useComputedFileExplorerState = () => {
   return {
     get fileTree(): FileTreeNode[] {
-      return [];
+      const { originFiles } = useFileExplorerStore();
+
+      return [
+        {
+          type: 'directory',
+          name: 'utils',
+          id: '/src/utils',
+          dirPath: '/src/utils',
+          children: [
+            {
+              type: 'file',
+              id: '/src/utils/config.ts',
+              origin: {
+                name: 'config.ts',
+                fullPath: '/src/utils/config.ts',
+                dirPath: '/src/utils',
+                readOnly: false,
+              },
+            },
+            {
+              type: 'file',
+              id: '/src/utils/index.ts',
+              origin: {
+                name: 'index.ts',
+                fullPath: '/src/utils/index.ts',
+                dirPath: '/src/utils',
+                readOnly: false,
+              },
+            },
+          ],
+        },
+        {
+          type: 'file',
+          id: '/src/apple.ts',
+          origin: {
+            name: 'apple.ts',
+            fullPath: '/src/apple.ts',
+            dirPath: '/src',
+            readOnly: false,
+          },
+        },
+        {
+          type: 'file',
+          id: '/src/banana.ts',
+          origin: {
+            name: 'banana.ts',
+            fullPath: '/src/banana.ts',
+            dirPath: '/src',
+            readOnly: false,
+          },
+        },
+      ];
+
+      return useMemo(() => buildFileTree(originFiles), [originFiles]);
     },
   };
 };

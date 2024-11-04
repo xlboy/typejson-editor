@@ -8,7 +8,21 @@ export interface OriginFile {
   readOnly: boolean;
 }
 
-export interface FileTreeNode {
+export interface FileNode {
+  type: 'file';
   origin: OriginFile;
-  children?: FileTreeNode[];
+  /** Uses origin.fullPath as id */
+  id: string;
 }
+
+export interface DirectoryNode {
+  type: 'directory';
+  name: string;
+  /** Uses dirPath as id */
+  id: string;
+  /** eg: `/src/modules/file-explorer/` */
+  dirPath: string;
+  children: FileTreeNode[];
+}
+
+export type FileTreeNode = FileNode | DirectoryNode;

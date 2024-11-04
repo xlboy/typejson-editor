@@ -13,7 +13,7 @@ import { useSize } from 'ahooks';
 import { useEffect, useRef } from 'react';
 
 function SidebarView() {
-  const { focusItem, setFocusItem } = useSidebarStore();
+  const { focusItem, lastFocusItem, setFocusItem } = useSidebarStore();
   const { dockviewApi } = useGlobalStore();
 
   const sidebarDom = useRef<HTMLDivElement>(null);
@@ -24,6 +24,9 @@ function SidebarView() {
       if (sidebarDomSize.width < SIDEBAR_BOUNDARY_WIDTH) {
         updateSidebarWidth(SIDEBAR_MIN_WIDTH);
         setFocusItem(null);
+      } else {
+        if (lastFocusItem) setFocusItem(lastFocusItem);
+        else setFocusItem(SIDEBAR_ITEMS[0]);
       }
     }
   }, [sidebarDomSize?.width]);

@@ -4,6 +4,7 @@ import { immer } from 'zustand/middleware/immer';
 
 interface SidebarStoreState {
   focusItem: SidebarItem | null;
+  lastFocusItem: SidebarItem | null;
 }
 
 interface SidebarStoreActions {
@@ -16,9 +17,13 @@ export const useSidebarStore = create<SidebarStore>()(
   immer(set => ({
     //#region  //*=========== state ===========
     focusItem: null,
+    lastFocusItem: null,
     //#endregion  //*======== state ===========
     //#region  //*=========== actions ===========
-    setFocusItem: item => set({ focusItem: item }),
+    setFocusItem: item => {
+      set({ focusItem: item });
+      if (item) set({ lastFocusItem: item });
+    },
     //#endregion  //*======== actions ===========
   })),
 );
