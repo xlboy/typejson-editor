@@ -1,5 +1,5 @@
-import { useComputedFileExplorerState, useFileExplorerStore } from './store';
-import type { FileTreeNode } from './types';
+import { useComputedFileExplorerState, useFileExplorerStore } from '../store';
+import type { FileTreeNode } from '../types';
 import { LineMdChevronSmallDown, LineMdChevronSmallRight } from '@/components/icons';
 import { apply } from '@twind/core';
 
@@ -24,6 +24,10 @@ function FileTree({ node, level = 0 }: FileTreeProps) {
     }
   };
 
+  const handleNodeContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
+    console.log('context menu', event);
+  };
+
   return (
     <div className={apply.nodeGroup`flex flex-col`}>
       <div
@@ -33,6 +37,7 @@ function FileTree({ node, level = 0 }: FileTreeProps) {
           `pl-[${indent + 5}px] pr-[5px]`,
         )}
         onClick={handleNodeClick}
+        onContextMenu={handleNodeContextMenu}
       >
         <span className={apply.foldStatusIcon`mr-2 transition duration-75`}>
           {isDirectory ? (

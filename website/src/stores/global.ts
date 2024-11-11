@@ -34,7 +34,7 @@ export const useGlobalStore = create<GlobalStore>()(
     setMonaco: monaco => set({ monaco }),
     setDockviewApi: (key, value) =>
       set(state => {
-        state.dockviewApi[key] = value;
+        state.dockviewApi[key] = value as never;
       }),
     //#endregion  //*======== actions ===========
   })),
