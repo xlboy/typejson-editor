@@ -1,0 +1,43 @@
+{
+  "folders": [
+    {
+      "name": "root",
+      "path": ".."
+    },
+    {
+      "name": "editor",
+      "path": "../packages/editor"
+    },
+    {
+      "name": "form-field",
+      "path": "../packages/form-field"
+    },
+    {
+      "name": "editor-demo",
+      "path": "../packages/editor/demo"
+    },
+    {
+      "name": "runner",
+      "path": "../packages/runner"
+    },
+    {
+      "name": "website",
+      "path": "../website"
+    }
+  ],
+  "settings": {
+    "typescript.tsdk": "root/node_modules/typescript/lib",
+    "typescript.tsserver.watchOptions": {
+      "watchDirectory": "useFsEvents",
+      "fallbackPolling": "dynamicPriorityPolling",
+      "watchFile": "useFsEventsOnParentDirectory",
+      "synchronousWatchDirectory": true
+    },
+    "twind-intellisense.presets": [
+      "phoenix-tailwind@3.4",
+    ],
+    // "twind-intellisense.classExtraction": {},
+    "twind-intellisense.configPath": "website",
+    "editor.wordWrap": "on"
+  }
+}
