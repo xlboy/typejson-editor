@@ -1,8 +1,9 @@
 import { buildFileTree } from './helpers';
-import type { DirectoryNode, FileTreeNode, OriginFile } from './types';
+import type { ContextMenuData, DirectoryNode, FileTreeNode, OriginFile } from './types';
 import { useGlobalStore } from '@/stores/global';
 import { enableMapSet } from 'immer';
 import { useMemo } from 'react';
+import { TriggerEvent } from 'react-contexify';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
@@ -12,12 +13,15 @@ interface FileExplorerStoreState {
   isInitialized: boolean;
   expandedDirNodes: Set<DirectoryNode['id']>;
   originFiles: OriginFile[];
+  contextMenuTriggerEvent: TriggerEvent | null;
+  contextMenuData: ContextMenuData | null;
 }
 
 interface FileExplorerStoreActions {
   initialize: () => void;
   refreshOriginFiles: () => void;
   toggleExpandedDirNode: (id: DirectoryNode['id']) => void;
+  showContextMenu: (event: TriggerEvent, data: ContextMenuData) => void;
 }
 
 export type FileExplorerStore = FileExplorerStoreState & FileExplorerStoreActions;
@@ -28,6 +32,8 @@ export const useFileExplorerStore = create<FileExplorerStore>()(
     isInitialized: false,
     expandedDirNodes: new Set(),
     originFiles: [],
+    contextMenuTriggerEvent: null,
+    contextMenuData: null,
     //#endregion  //*======== state ===========
     //#region  //*=========== actions ===========
     initialize() {
@@ -54,7 +60,7 @@ export const useFileExplorerStore = create<FileExplorerStore>()(
       const originFiles = models.map(model => ({
         name: model.uri.path.split('/').pop() || '',
         fullPath: model.uri.path,
-        dirPath: model.uri.path.replace(/\/[^/]+$/, ''),
+        dirPath: model.uri.path.replace(/\/[^/]+$/, '') || '/',
         readOnly: model.metadata?.readOnly || false,
       }));
       set({ originFiles });
@@ -65,6 +71,9 @@ export const useFileExplorerStore = create<FileExplorerStore>()(
           ? state.expandedDirNodes.delete(id)
           : state.expandedDirNodes.add(id);
       });
+    },
+    showContextMenu(event, data) {
+      set({ contextMenuTriggerEvent: event, contextMenuData: data });
     },
     //#endregion  //*======== actions ===========
   })),

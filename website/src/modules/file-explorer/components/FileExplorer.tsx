@@ -1,5 +1,7 @@
+import { getFileIcon, getFolderIcon } from '../helpers';
 import { useComputedFileExplorerState, useFileExplorerStore } from '../store';
 import type { FileTreeNode } from '../types';
+import ContextMenu from './ContextMenu';
 import { LineMdChevronSmallDown, LineMdChevronSmallRight } from '@/components/icons';
 import { apply } from '@twind/core';
 
@@ -9,13 +11,16 @@ interface FileTreeProps {
 }
 
 function FileTree({ node, level = 0 }: FileTreeProps) {
-  const { expandedDirNodes, toggleExpandedDirNode } = useFileExplorerStore();
+  const { expandedDirNodes, toggleExpandedDirNode, showContextMenu } =
+    useFileExplorerStore();
   const indent = level * 16; // 每层缩进 16px
 
   const isDirectory = node.type === 'directory';
-  const nodeItemName = isDirectory ? node.name : node.origin.name;
   const showChildren =
     isDirectory && node.children.length && expandedDirNodes.has(node.id);
+  const nodeIconUrl = isDirectory
+    ? getFolderIcon(node.name, expandedDirNodes.has(node.id))
+    : getFileIcon(node.origin.name);
 
   const handleNodeClick = () => {
     if (isDirectory) toggleExpandedDirNode(node.id);
@@ -25,7 +30,8 @@ function FileTree({ node, level = 0 }: FileTreeProps) {
   };
 
   const handleNodeContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
-    console.log('context menu', event);
+    showContextMenu(event, { node });
+    event.stopPropagation();
   };
 
   return (
@@ -39,7 +45,7 @@ function FileTree({ node, level = 0 }: FileTreeProps) {
         onClick={handleNodeClick}
         onContextMenu={handleNodeContextMenu}
       >
-        <span className={apply.foldStatusIcon`mr-2 transition duration-75`}>
+        <span className={apply.foldStatusIcon`mr-2 duration-0`}>
           {isDirectory ? (
             expandedDirNodes.has(node.id) ? (
               <LineMdChevronSmallDown />
@@ -50,8 +56,10 @@ function FileTree({ node, level = 0 }: FileTreeProps) {
             <div className={apply`w-[16px]`} />
           )}
         </span>
-        <span className={apply.fileIcon`mr-5`}>{isDirectory ? '📁' : '📄'}</span>
-        <span>{nodeItemName}</span>
+        <span className={apply.fileIcon`mr-5`}>
+          <img src={nodeIconUrl} className={apply`w-[16px]`} />
+        </span>
+        <span>{isDirectory ? node.name : node.origin.name}</span>
       </div>
 
       {showChildren && (
@@ -67,12 +75,17 @@ function FileTree({ node, level = 0 }: FileTreeProps) {
 
 function FileExplorer() {
   const { fileTree } = useComputedFileExplorerState();
+  const { showContextMenu } = useFileExplorerStore();
 
   return (
-    <div className={apply.fileExplorer`py-5 size-full`}>
+    <div
+      className={apply.fileExplorer`py-5 size-full`}
+      onContextMenu={event => showContextMenu(event, { node: null })}
+    >
       {fileTree.map(node => (
         <FileTree key={node.id} node={node} />
       ))}
+      <ContextMenu />
     </div>
   );
 }

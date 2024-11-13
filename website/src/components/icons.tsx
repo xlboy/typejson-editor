@@ -74,7 +74,7 @@ export function LineMdChevronSmallRight(props: SVGProps<SVGSVGElement>) {
         <animate
           fill="freeze"
           attributeName="stroke-dashoffset"
-          dur="0.3s"
+          dur="0.01s"
           values="10;0"
         ></animate>
       </path>
@@ -104,7 +104,7 @@ export function LineMdChevronSmallDown(props: SVGProps<SVGSVGElement>) {
         <animate
           fill="freeze"
           attributeName="stroke-dashoffset"
-          dur="0.3s"
+          dur="0.01s"
           values="10;0"
         ></animate>
       </path>

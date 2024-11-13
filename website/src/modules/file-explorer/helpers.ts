@@ -1,4 +1,5 @@
 import type { FileTreeNode, OriginFile } from './types';
+import Icons from 'virtual:icons';
 
 export function buildFileTree(originFiles: OriginFile[]): FileTreeNode[] {
   // 按照路径字母顺序排序
@@ -77,4 +78,36 @@ export function buildFileTree(originFiles: OriginFile[]): FileTreeNode[] {
   }
 
   return root;
+}
+
+function _generateIconPath(iconName: string, isOpen: boolean = false) {
+  return '/public/material-icons/' + iconName + (isOpen ? '-open' : '') + '.svg';
+}
+
+export function getFileIcon(fileName: string) {
+  const name = fileName.toLowerCase();
+
+  // 1. 检查是否有完全匹配的文件名图标
+  if (name in Icons.fileNames) {
+    return _generateIconPath(Icons.fileNames[name]);
+  }
+
+  // 2. 检查文件扩展名
+  const ext = name.split('.').pop() || '';
+  if (ext in Icons.fileExtensions) {
+    return _generateIconPath(Icons.fileExtensions[ext]);
+  }
+
+  // 3. 检查语言ID
+  if (ext in Icons.languageIds) {
+    return _generateIconPath(Icons.languageIds[ext]);
+  }
+
+  // 4. 默认返回普通文件图标
+  return _generateIconPath('file');
+}
+
+export function getFolderIcon(folderName: string, isOpen: boolean = false) {
+  const name = folderName.toLowerCase();
+  return _generateIconPath(Icons.folderNames?.[name] || Icons.folder, isOpen);
 }

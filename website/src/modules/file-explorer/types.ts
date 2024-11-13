@@ -26,3 +26,11 @@ export interface DirectoryNode {
 }
 
 export type FileTreeNode = FileNode | DirectoryNode;
+
+export interface ContextMenuData {
+  /**
+   * - null: 表示当前点击的区域不在文件树节点上（例如：空白区域，归属 root）
+   * - FileTreeNode: 表示当前点击的区域在文件树节点上
+   */
+  node: FileTreeNode | null;
+}
