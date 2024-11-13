@@ -81,7 +81,7 @@ export function buildFileTree(originFiles: OriginFile[]): FileTreeNode[] {
 }
 
 function _generateIconPath(iconName: string, isOpen: boolean = false) {
-  return '/public/material-icons/' + iconName + (isOpen ? '-open' : '') + '.svg';
+  return '/material-icons/' + iconName + (isOpen ? '-open' : '') + '.svg';
 }
 
 export function getFileIcon(fileName: string) {

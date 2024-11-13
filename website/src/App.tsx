@@ -1,6 +1,7 @@
 import { TypeJsonEditor } from '../../packages/editor/src';
 import NavigationBar from './components/NavigationBar';
 import { SidebarView } from './modules/sidebar';
+import { useDockviewStore } from './stores/dockview';
 import { useGlobalStore } from './stores/global';
 import { MantineProvider } from '@mantine/core';
 import '@mantine/core/styles.css';
@@ -13,7 +14,7 @@ import 'dockview/dist/styles/dockview.css';
 const gridComponents = {
   SidebarView,
   EditorView() {
-    const { setDockviewApi } = useGlobalStore();
+    const { setDockviewApi } = useDockviewStore();
 
     return (
       <DockviewReact
@@ -25,17 +26,22 @@ const gridComponents = {
         components={{
           editor(props) {
             const { monaco } = useGlobalStore();
-            const {} = props.params as {};
+            // const {} = props.params as {};
 
             return (
               <div className={tx`size-full text-white`}>
-                <TypeJsonEditor monaco={monaco!} />
+                <TypeJsonEditor monaco={monaco!} initialActiveFile={props.api.id} />
               </div>
             );
           },
         }}
         onReady={event => {
           setDockviewApi('dock', event.api);
+          // event.api.addPanel({
+          //   id: '/index.ts',
+          //   component: 'editor',
+          //   title: 'index.ts',
+          // });
         }}
       />
     );
@@ -43,7 +49,8 @@ const gridComponents = {
 } satisfies Record<string, React.FunctionComponent<IGridviewPanelProps>>;
 
 function App() {
-  const { setDockviewApi, setMonaco, monaco } = useGlobalStore();
+  const { setMonaco, monaco } = useGlobalStore();
+  const { setDockviewApi, initGridLayout } = useDockviewStore();
 
   useMount(() => {
     loader.config({
@@ -78,6 +85,7 @@ function App() {
                   minimumWidth: 43,
                   maximumWidth: 400,
                 });
+                initGridLayout();
               }}
               components={gridComponents}
               orientation={Orientation.VERTICAL}

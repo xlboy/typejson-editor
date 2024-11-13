@@ -1,4 +1,4 @@
-import type { TypeJsonEditorProps, TypeJsonFile } from '@typejson-editor/editor';
+import type { TypeJsonEditorProps, TypeJsonFile } from '../../editor/src';
 
 /**
  * @example
@@ -25,7 +25,7 @@ export interface TypeJsonEditorFormFieldValue<Result = unknown> {
    * 用户编辑的文件源（压缩格式的 `TypeJsonFile[]`）
    *
    * 存放实际需要编辑的代码内容
-   * 
+   *
    * @default
    * [{ path: '/index.ts', content: '' }]
    */
@@ -46,7 +46,10 @@ export interface TypeJsonEditorFormFieldProps {
   onChange?: (value: TypeJsonEditorFormFieldValue) => void;
   /** @default 'blur' */
   onChangeMode?: 'blur' | 'change';
-  editorProps: Omit<TypeJsonEditorProps, 'initialFiles' | 'initialActiveFile' | 'fileRef'>;
+  editorProps: Omit<
+    TypeJsonEditorProps,
+    'initialFiles' | 'initialActiveFile' | 'fileRef'
+  >;
   /**
    * @default 'index.ts'
    */

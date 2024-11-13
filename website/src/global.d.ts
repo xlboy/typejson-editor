@@ -23,3 +23,12 @@ declare module 'virtual:icons' {
   >;
   export default icons;
 }
+
+declare interface MonacoOriginFile {
+  /** eg: `index.ts` */
+  name: string;
+  /** eg: `/src/modules/file-explorer/index.ts` */
+  fullPath: string;
+  /** eg: `/src/modules/file-explorer/` */
+  dirPath: string;
+}

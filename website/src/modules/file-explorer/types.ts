@@ -1,10 +1,4 @@
-export interface OriginFile {
-  /** eg: `index.ts` */
-  name: string;
-  /** eg: `/src/modules/file-explorer/index.ts` */
-  fullPath: string;
-  /** eg: `/src/modules/file-explorer/` */
-  dirPath: string;
+export interface OriginFile extends MonacoOriginFile {
   readOnly: boolean;
 }
 

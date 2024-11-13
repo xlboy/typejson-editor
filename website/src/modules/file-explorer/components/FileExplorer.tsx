@@ -3,6 +3,7 @@ import { useComputedFileExplorerState, useFileExplorerStore } from '../store';
 import type { FileTreeNode } from '../types';
 import ContextMenu from './ContextMenu';
 import { LineMdChevronSmallDown, LineMdChevronSmallRight } from '@/components/icons';
+import { useGlobalStore } from '@/stores/global';
 import { apply } from '@twind/core';
 
 interface FileTreeProps {
@@ -13,6 +14,7 @@ interface FileTreeProps {
 function FileTree({ node, level = 0 }: FileTreeProps) {
   const { expandedDirNodes, toggleExpandedDirNode, showContextMenu } =
     useFileExplorerStore();
+
   const indent = level * 16; // 每层缩进 16px
 
   const isDirectory = node.type === 'directory';
@@ -25,7 +27,6 @@ function FileTree({ node, level = 0 }: FileTreeProps) {
   const handleNodeClick = () => {
     if (isDirectory) toggleExpandedDirNode(node.id);
     else {
-      console.log('click file', node.origin.fullPath);
     }
   };
 
@@ -39,7 +40,7 @@ function FileTree({ node, level = 0 }: FileTreeProps) {
       <div
         className={apply.nodeItem(
           'flex items-center gap-2 p-1 rounded cursor-pointer select-none text-[#929aae]',
-          'hover:(text-[#e3e5ea] bg-[#1e2532])',
+          'hover:(text-[#e3e5ea] bg-[#1e2532]) min-w-[200px]',
           `pl-[${indent + 5}px] pr-[5px]`,
         )}
         onClick={handleNodeClick}

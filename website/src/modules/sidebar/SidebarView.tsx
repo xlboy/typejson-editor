@@ -6,33 +6,38 @@ import {
 } from './config';
 import { useSidebarStore } from './store';
 import { SidebarItem } from './types';
-import { useGlobalStore } from '@/stores/global';
+import { useDockviewStore } from '@/stores/dockview';
 import { Tooltip } from '@mantine/core';
 import { apply } from '@twind/core';
-import { useSize } from 'ahooks';
+import { useMount, useSize } from 'ahooks';
 import { useEffect, useRef } from 'react';
 
 function SidebarView() {
   const { focusItem, lastFocusItem, setFocusItem } = useSidebarStore();
-  const { dockviewApi } = useGlobalStore();
+  const { dockviewApi } = useDockviewStore();
 
   const sidebarDom = useRef<HTMLDivElement>(null);
   const sidebarDomSize = useSize(sidebarDom);
 
-  useEffect(() => {
-    if (sidebarDomSize?.width) {
-      if (sidebarDomSize.width < SIDEBAR_BOUNDARY_WIDTH) {
-        updateSidebarWidth(SIDEBAR_MIN_WIDTH);
-        setFocusItem(null);
-      } else {
-        if (lastFocusItem) setFocusItem(lastFocusItem);
-        else setFocusItem(SIDEBAR_ITEMS[0]);
-      }
-    }
-  }, [sidebarDomSize?.width]);
+  // useEffect(() => {
+  //   if (sidebarDomSize?.width) {
+  //     if (sidebarDomSize.width < SIDEBAR_BOUNDARY_WIDTH) {
+  //       updateSidebarWidth(SIDEBAR_MIN_WIDTH);
+  //       setFocusItem(null);
+  //     } else {
+  //       if (lastFocusItem) setFocusItem(lastFocusItem);
+  //       else setFocusItem(SIDEBAR_ITEMS[0]);
+  //     }
+  //   }
+  // }, [sidebarDomSize?.width]);
+  // useMount(() => {
+  //   if (focusItem) {
+  //     updateSidebarWidth(SIDEBAR_DEFAULT_WIDTH);
+  //   }
+  // });
 
   const updateSidebarWidth = (w: number) =>
-    dockviewApi?.grid?.getPanel('sidebar-panel')?.api.setSize({ width: w });
+    dockviewApi.grid?.getPanel('sidebar-panel')?.api.setSize({ width: w });
 
   const handleIconClick = (item: SidebarItem) => {
     const changedItem = focusItem?.id === item.id ? null : item;
