@@ -1,4 +1,4 @@
-import type { TypeJsonEditorProps, TypeJsonFile } from '../../editor/src';
+import type { TypeJsonEditorProps, TypeJsonFile } from '@typejson-editor/editor';
 
 /**
  * @example

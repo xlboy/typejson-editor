@@ -1,10 +1,3 @@
-import {
-  TypeJsonEditor,
-  TypeJsonEditorFileAPI,
-  TypeJsonEditorProps,
-  TypeJsonEditorValidationAPI,
-  TypeJsonFile,
-} from '../../editor/src';
 import { TypeJsonRunner } from '../../runner/src';
 import type {
   TypeJsonEditorFormFieldActionAPI,
@@ -15,9 +8,15 @@ import type {
 import { lzJsonCompressor } from './utils/lz-json-compressor';
 import { apply, css, tx } from './utils/twind';
 import { AppstoreOutlined } from '@ant-design/icons';
+import {
+  TypeJsonEditor,
+  TypeJsonEditorFileAPI,
+  TypeJsonEditorProps,
+  TypeJsonEditorValidationAPI,
+  TypeJsonFile,
+} from '@typejson-editor/editor';
 import { useEventListener, useMap, useSet } from 'ahooks';
 import { Dropdown, Modal } from 'antd';
-import { merge } from 'lodash-es';
 import type * as Monaco from 'monaco-editor';
 import {
   memo,
@@ -28,38 +27,7 @@ import {
   useRef,
   useState,
 } from 'react';
-
-const defaultEditorOptions: TypeJsonEditorProps['editorOptions'] = {
-  theme: 'vs-dark',
-  minimap: { enabled: false },
-  fontSize: 14,
-  suggestFontSize: 14,
-  codeLensFontSize: 14,
-  tabIndex: 2,
-  cursorBlinking: 'smooth',
-  scrollBeyondLastLine: false,
-  hover: { enabled: true, delay: 300, sticky: true },
-  colorDecorators: true,
-  suggest: {
-    filterGraceful: true,
-    showWords: false,
-    showStatusBar: true,
-    preview: true,
-    previewMode: 'subwordSmart',
-  },
-  inlineSuggest: { enabled: true, mode: 'subwordSmart' },
-  suggestSelection: 'first',
-  acceptSuggestionOnEnter: 'smart',
-  definitionLinkOpensInPeek: true,
-  peekWidgetDefaultFocus: 'editor',
-  inlayHints: { fontSize: 12 },
-  fontFamily: 'monospace',
-  bracketPairColorization: {
-    enabled: true,
-    independentColorPoolPerBracketType: true,
-  },
-  stickyScroll: { enabled: true },
-};
+import { createPortal, flushSync } from 'react-dom';
 
 function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
   const {
@@ -79,6 +47,8 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
   const defaultActionRef = useRef<TypeJsonEditorFormFieldActionAPI>(null);
   const actionRef = props.actionRef || defaultActionRef;
 
+  const [isFullScreen, setIsFullScreen] = useState(false);
+
   const [running, setRunning] = useState(false);
   const [loadingTextSet, loadingTextActions] = useSet<
     'Running...' | 'Runner initializing...'
@@ -89,11 +59,6 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
     DisplayError['type'],
     Omit<DisplayError, 'type'>
   >();
-
-  const mergedEditorOptions = useMemo(
-    () => merge(defaultEditorOptions, editorProps.editorOptions),
-    [editorProps],
-  );
 
   const originPresetFiles = useMemo(
     () =>
@@ -110,6 +75,27 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
           displayErrorActions.set('warning:running', {});
           throw new Error('Running');
         }
+        const { typeErrors, syntacticErrors } =
+          await editorValidationRef.current!.getErrors();
+        if (typeErrors.length > 0) {
+          displayErrorActions.set('error:type-check-failure', {
+            errors: typeErrors.map(v => `${v.messageText} (${v.lineNumber}:${v.column})`),
+          });
+          throw new Error('Type check failure');
+        }
+
+        displayErrorActions.remove('error:type-check-failure');
+
+        if (syntacticErrors.length > 0) {
+          displayErrorActions.set('error:syntactic-check-failure', {
+            errors: syntacticErrors.map(
+              v => `${v.messageText} (${v.lineNumber}:${v.column})`,
+            ),
+          });
+          throw new Error('Syntactic check failure');
+        }
+
+        displayErrorActions.remove('error:syntactic-check-failure');
 
         setRunning(true);
         loadingTextActions.add('Running...');
@@ -213,10 +199,35 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
   );
 
   useEffect(() => {
-    if (!value) return;
+    refreshEditor();
+  }, [value]);
 
-    const sourceFiles = lzJsonCompressor.decompress<TypeJsonFile[]>(value.source);
-    const presetFiles = value.preset
+  const triggerChange = async (changedValue?: TypeJsonEditorFormFieldValue) => {
+    if (!runnerRef.current) return;
+
+    try {
+      changedValue ||= await actionRef.current!.run();
+      onChange?.(changedValue);
+    } catch (error) {
+      console.error('run error', error);
+    }
+  };
+
+  const onActiveFileContentChange: NonNullable<
+    TypeJsonEditorProps['onActiveFileContentChange']
+  > = useCallback(
+    (path, content) => {
+      if (onChangeMode === 'change') triggerChange();
+      editorProps.onActiveFileContentChange?.(path, content);
+    },
+    [onChangeMode],
+  );
+
+  const refreshEditor = () => {
+    const sourceFiles: TypeJsonFile[] = value
+      ? lzJsonCompressor.decompress<TypeJsonFile[]>(value.source)
+      : [{ path: '/index.ts', content: '' }];
+    const presetFiles = value?.preset
       ? lzJsonCompressor.decompress<TypeJsonFile[]>(value.preset)
       : [];
 
@@ -241,28 +252,7 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
           loadingTextActions.remove('Runner initializing...');
         });
     }
-  }, [value]);
-
-  const triggerChange = async (changedValue?: TypeJsonEditorFormFieldValue) => {
-    if (!runnerRef.current) return;
-
-    try {
-      changedValue ||= await actionRef.current!.run();
-      onChange?.(changedValue);
-    } catch (error) {
-      console.error('run error', error);
-    }
   };
-
-  const onActiveFileContentChange: NonNullable<
-    TypeJsonEditorProps['onActiveFileContentChange']
-  > = useCallback(
-    (path, content) => {
-      if (onChangeMode === 'change') triggerChange();
-      editorProps.onActiveFileContentChange?.(path, content);
-    },
-    [onChangeMode],
-  );
 
   const handleUpdatePreset = () => {
     const preset = prompt('Please Input Preset: ');
@@ -276,6 +266,11 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
     if (source && value) {
       onChange?.({ ...value, source });
     }
+  };
+
+  const handleFullScreen = () => {
+    setIsFullScreen(true);
+    setTimeout(() => refreshEditor(), 1000);
   };
 
   const handleViewResult = async () => {
@@ -331,7 +326,7 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
 
       return (
         <div
-          className={tx`border(2 solid [#f56c6c]) rounded-[6px] p-3 pb-0 absolute bottom-0 w-full text-[#f56c6c] bg-[#2b1d1d]`}
+          className={tx`border(2 solid [#f56c6c]) rounded-[6px] p-3 pb-0 absolute bottom-0 w-full text-[#f56c6c] bg-[#2b1d1d] max-h-[100px] overflow-y-auto`}
         >
           {errors.map(error => (
             <div key={error} className={tx`pb-3`}>
@@ -345,44 +340,48 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
       const withLoader = (children: React.ReactNode) => {
         const loadingText = loadingTextSet.values().next().value;
         return (
-          <div
-            className={apply.loaderWrapper`group absolute right-20 bottom-20 z-10 p-2`}
-          >
+          <div className={tx(apply.loaderWrapper`absolute right-20 bottom-20 z-10 p-2`)}>
             <div
-              className={apply`absolute size-full rounded-full left-0 top-0 overflow-hidden`}
+              className={tx(
+                apply`absolute size-full rounded-full left-0 top-0 overflow-hidden`,
+              )}
             >
               <div
-                className={apply.loader(
-                  'size-[200px] absolute left-1/2 top-1/2',
-                  loadingText ? 'block' : 'hidden',
-                  css`
-                    background: radial-gradient(
-                        circle at 30% 30%,
-                        #ff0000,
-                        transparent 50%
-                      ),
-                      radial-gradient(circle at 70% 70%, #00ff00, transparent 50%),
-                      radial-gradient(circle at 50% 50%, #0000ff, transparent 50%),
-                      radial-gradient(circle at 80% 20%, #ff00ff, transparent 50%);
-                    transform: translate(-50%, -50%);
-                    animation: spinCenter 1.5s infinite linear;
-                    @keyframes spinCenter {
-                      0% {
-                        transform: translate(-50%, -50%) rotate(0deg);
+                className={tx(
+                  apply.loader(
+                    'size-[200px] absolute left-1/2 top-1/2',
+                    loadingText ? 'block' : 'hidden',
+                    css`
+                      background: radial-gradient(
+                          circle at 30% 30%,
+                          #ff0000,
+                          transparent 50%
+                        ),
+                        radial-gradient(circle at 70% 70%, #00ff00, transparent 50%),
+                        radial-gradient(circle at 50% 50%, #0000ff, transparent 50%),
+                        radial-gradient(circle at 80% 20%, #ff00ff, transparent 50%);
+                      transform: translate(-50%, -50%);
+                      animation: spinCenter 1.5s infinite linear;
+                      @keyframes spinCenter {
+                        0% {
+                          transform: translate(-50%, -50%) rotate(0deg);
+                        }
+                        100% {
+                          transform: translate(-50%, -50%) rotate(360deg);
+                        }
                       }
-                      100% {
-                        transform: translate(-50%, -50%) rotate(360deg);
-                      }
-                    }
-                  `,
+                    `,
+                  ),
                 )}
               />
             </div>
             <div
-              className={apply.bodyWrapper`relative flex items-center justify-center rounded-full bg-black`}
+              className={tx(
+                apply.bodyWrapper`relative flex items-center justify-center rounded-full bg-black`,
+              )}
             >
               {loadingText ? (
-                <div className={apply.body('text-white/70 mx-8')}>{loadingText}</div>
+                <div className={tx(apply.body('text-white/70 mx-8'))}>{loadingText}</div>
               ) : null}
               {children}
             </div>
@@ -391,10 +390,12 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
       };
       const menuButtonJsx = (
         <div
-          className={apply.menuButton(
-            'flex items-center justify-center shadow rounded-full p-5 cursor-pointer',
-            'text-zinc-400 hover:(text-gray-600 shadow-gray/50)',
-            'backdrop-blur-lg bg-gradient-to-tr from-transparent via-[rgba(121,121,121,0.16)] to-transparent duration-700',
+          className={tx(
+            apply.menuButton(
+              'flex items-center justify-center shadow rounded-full p-5 cursor-pointer',
+              'text-zinc-400 hover:(text-gray-600 shadow-gray/50)',
+              'backdrop-blur-lg bg-gradient-to-tr from-transparent via-[rgba(121,121,121,0.16)] to-transparent duration-700',
+            ),
           )}
         >
           <Dropdown
@@ -420,6 +421,11 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
                   label: <a data-float-menu-item>View Result</a>,
                   onClick: handleViewResult,
                 },
+                // {
+                //   key: 'full-screen',
+                //   label: <a data-float-menu-item>Full Screen</a>,
+                //   onClick: handleFullScreen,
+                // },
               ],
             }}
             trigger={['hover']}
@@ -431,24 +437,56 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
 
       return withLoader(menuButtonJsx);
     },
-  };
+    editorContent() {
+      const editorJsx = (
+        <div
+          ref={rootDOMRef}
+          tabIndex={0}
+          className={tx('relative', isFullScreen && '!w-full !h-full rounded-[5px]')}
+        >
+          <TypeJsonEditor
+            {...editorProps}
+            editorOptions={editorProps.editorOptions}
+            fileRef={editorFileRef}
+            validationRef={editorValidationRef}
+            onActiveFileContentChange={onActiveFileContentChange}
+            onCreated={editor => {
+              monacoEditorRef.current = editor;
+            }}
+          />
+          {displayErrorMap.size > 0 && renderer.alert()}
+          {renderer.floatMenu()}
+        </div>
+      );
 
-  return (
-    <div ref={rootDOMRef} tabIndex={0} className={tx`relative`}>
-      <TypeJsonEditor
-        {...editorProps}
-        editorOptions={mergedEditorOptions}
-        fileRef={editorFileRef}
-        validationRef={editorValidationRef}
-        onActiveFileContentChange={onActiveFileContentChange}
-        onCreated={editor => {
-          monacoEditorRef.current = editor;
-        }}
-      />
-      {displayErrorMap.size > 0 && renderer.alert()}
-      {renderer.floatMenu()}
-    </div>
-  );
+      if (isFullScreen) {
+        return (
+          <div
+            className={tx`
+            fixed inset-0 z-50
+            backdrop-blur-md bg-black/30
+            flex items-center justify-center
+          `}
+          >
+            <div
+              className={tx`
+              w-[90%] h-[90%]
+              bg-[#1e1e1e] rounded-lg shadow-2xl
+              overflow-hidden
+            `}
+            >
+              {editorJsx}
+            </div>
+          </div>
+        );
+      }
+
+      return editorJsx;
+    },
+  };
+  return isFullScreen
+    ? createPortal(renderer.editorContent(), document.body)
+    : renderer.editorContent();
 }
 
 export default memo(TypeJsonEditorFormField);

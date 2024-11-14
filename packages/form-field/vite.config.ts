@@ -1,0 +1,25 @@
+import pkgJSON from './package.json';
+import react from '@vitejs/plugin-react';
+import { visualizer } from 'rollup-plugin-visualizer';
+import { defineConfig } from 'vite';
+import dts from 'vite-plugin-dts';
+
+export default defineConfig({
+  plugins: [react(), dts({ insertTypesEntry: true }), visualizer({ open: false })],
+  build: {
+    outDir: 'dist',
+    lib: {
+      entry: './src/index.ts',
+      fileName: 'index',
+      formats: ['es', 'cjs'],
+    },
+    rollupOptions: {
+      external: [
+        'react',
+        'react/jsx-runtime',
+        'sucrase',
+        ...Object.keys(pkgJSON.dependencies),
+      ],
+    },
+  },
+});

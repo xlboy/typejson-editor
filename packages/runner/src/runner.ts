@@ -24,7 +24,9 @@ export class TypeJsonRunner {
 
   async setFiles(files: Array<TypeJsonFile>) {
     if (!this.nodebox) {
-      throw new Error('Nodebox is not initialized. Please ensure init() has completed successfully.');
+      throw new Error(
+        'Nodebox is not initialized. Please ensure init() has completed successfully.',
+      );
     }
 
     const parsedFileMap: Record<TypeJsonFile['path'], string> = {};
@@ -50,7 +52,10 @@ export class TypeJsonRunner {
 
     await this.nodebox.fs.init({
       'package.json': JSON.stringify({
-        dependencies: Array.from(fileDependencies).reduce((acc, cur) => ({ ...acc, [cur]: '*' }), {}),
+        dependencies: Array.from(fileDependencies).reduce(
+          (acc, cur) => ({ ...acc, [cur]: '*' }),
+          {},
+        ),
       } satisfies PackageJson),
       ...parsedFileMap,
     });
@@ -58,7 +63,9 @@ export class TypeJsonRunner {
 
   async run(options?: { files?: Array<TypeJsonFile> }) {
     if (!this.nodebox) {
-      throw new Error('Nodebox is not initialized. Please ensure init() has completed successfully.');
+      throw new Error(
+        'Nodebox is not initialized. Please ensure init() has completed successfully.',
+      );
     }
 
     if (options?.files) {
@@ -118,9 +125,13 @@ export class TypeJsonRunner {
     return;
 
     async function initNodeboxConnect() {
-      const iframeEl = document.getElementById(ctx.options.nodeboxIframeId) as HTMLIFrameElement | undefined;
+      const iframeEl = document.getElementById(ctx.options.nodeboxIframeId) as
+        | HTMLIFrameElement
+        | undefined;
       if (!iframeEl)
-        throw new Error('Nodebox iframe element not found. Make sure initNodeboxIframe() was called first.');
+        throw new Error(
+          'Nodebox iframe element not found. Make sure initNodeboxIframe() was called first.',
+        );
 
       const nodebox = new Nodebox({ iframe: iframeEl });
       await nodebox.connect();
@@ -128,6 +139,9 @@ export class TypeJsonRunner {
     }
 
     function initNodeboxIframe() {
+      const existingIframe = document.getElementById(ctx.options.nodeboxIframeId);
+      if (existingIframe) return;
+
       const iframe = document.createElement('iframe');
       iframe.id = ctx.options.nodeboxIframeId;
       iframe.style.display = 'none';
