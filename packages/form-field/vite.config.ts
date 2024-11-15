@@ -17,6 +17,8 @@ export default defineConfig({
       external: [
         'react',
         'react/jsx-runtime',
+        'react-dom',
+        'react-dom/jsx-runtime',
         'sucrase',
         ...Object.keys(pkgJSON.dependencies),
       ],

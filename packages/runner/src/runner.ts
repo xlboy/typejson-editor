@@ -77,7 +77,10 @@ export class TypeJsonRunner {
       const configOutputPrefix = 'TypeJson Runner Config:';
       shell.stdout.on('data', data => {
         if (data.startsWith(configOutputPrefix)) {
-          const configStr = data.slice(configOutputPrefix.length);
+          const configStr = data.slice(configOutputPrefix.length).trim();
+          if (configStr === '') return resolve('');
+          if (configStr === 'undefined') return resolve(undefined);
+          if (configStr === 'null') return resolve(null);
           resolve(JSON.parse(configStr));
         } else {
           console.log('TypeJson Runner Output:', data);

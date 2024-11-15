@@ -6,7 +6,11 @@ import { useVimMonacoPlugin } from './hooks/monaco/use-vim.plugin';
 import { useExposeFileAPI } from './hooks/use-expose-file-api';
 import { useExposeValidationAPI } from './hooks/use-expose-validation-api';
 import { useModelManager } from './hooks/use-model-manager';
-import { TypeJsonEditorFileAPI, TypeJsonEditorProps, TypeJsonEditorValidationAPI } from './types';
+import {
+  TypeJsonEditorFileAPI,
+  TypeJsonEditorProps,
+  TypeJsonEditorValidationAPI,
+} from './types';
 import type * as Monaco from 'monaco-editor';
 import { memo, useEffect, useRef } from 'react';
 import { useDebounceCallback } from 'usehooks-ts';
@@ -20,7 +24,9 @@ function TypeJsonEditor(props: TypeJsonEditorProps) {
 
   useInitMonacoSetting(monaco);
 
-  useTwoslashInlayMonacoPlugin(monaco, { enabled: props.plugins?.twoslashInlay?.enabled ?? true });
+  useTwoslashInlayMonacoPlugin(monaco, {
+    enabled: props.plugins?.twoslashInlay?.enabled ?? true,
+  });
   useVimMonacoPlugin(editorRef, { enabled: props.plugins?.vim?.enabled ?? false });
   const { load: loadTypeLib } = useTypeAcquisitionMonacoPlugin(
     { monaco, modelManager },
@@ -39,7 +45,10 @@ function TypeJsonEditor(props: TypeJsonEditorProps) {
   const validationRef = props.validationRef || defaultValidationRef;
   useExposeValidationAPI(validationRef, { monaco, modelManager });
 
-  const debouncedLoadTypeLib = useDebounceCallback((code: string) => loadTypeLib(code), 500);
+  const debouncedLoadTypeLib = useDebounceCallback(
+    (code: string) => loadTypeLib(code),
+    500,
+  );
 
   useEffect(() => {
     if (mountedDOMRef.current) {
@@ -118,6 +127,11 @@ function TypeJsonEditor(props: TypeJsonEditorProps) {
           }
           props.onActiveFileContentChange?.(activeModel.uri.path, newValue);
         }),
+        monaco.editor.onDidCreateModel(model => {
+          if (props.plugins?.typeAcquisition?.enabled) {
+            debouncedLoadTypeLib(model.getValue());
+          }
+        }),
       ];
 
       return () => {
@@ -127,7 +141,11 @@ function TypeJsonEditor(props: TypeJsonEditorProps) {
   }, []);
 
   return (
-    <div ref={mountedDOMRef} className={props.className} style={{ width: '100%', height: '100%', ...props.styles }} />
+    <div
+      ref={mountedDOMRef}
+      className={props.className}
+      style={{ width: '100%', height: '100%', ...props.styles }}
+    />
   );
 }
 

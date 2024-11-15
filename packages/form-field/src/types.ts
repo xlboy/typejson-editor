@@ -29,7 +29,7 @@ export interface TypeJsonEditorFormFieldValue<Result = unknown> {
    * @default
    * [{ path: '/index.ts', content: '' }]
    */
-  source: CompressedJsonString;
+  source?: CompressedJsonString;
   /**
    * Editor 执行结果（执行 `index.ts` 文件后得到的默认导出结果）
    *
@@ -38,7 +38,7 @@ export interface TypeJsonEditorFormFieldValue<Result = unknown> {
    * export default Math.abs(-1);
    * // 则 result 的值为 1
    */
-  result: Result;
+  result?: Result;
 }
 
 export interface TypeJsonEditorFormFieldProps {

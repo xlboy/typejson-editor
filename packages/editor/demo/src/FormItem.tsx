@@ -1,9 +1,16 @@
 import { TypeJsonEditorFormField } from '../../../form-field/src';
-import { TypeJsonEditorFormFieldActionAPI, TypeJsonEditorFormFieldValue } from '../../../form-field/src/types';
+import {
+  TypeJsonEditorFormFieldActionAPI,
+  TypeJsonEditorFormFieldValue,
+} from '../../../form-field/src/types';
 import { TypeJsonRunner } from '../../../runner/src';
 import loader from '@monaco-editor/loader';
 import { tx } from '@twind/core';
-import { TypeJsonEditor, type TypeJsonEditorFileAPI, type TypeJsonEditorValidationAPI } from '@typejson-editor/editor';
+import {
+  TypeJsonEditor,
+  type TypeJsonEditorFileAPI,
+  type TypeJsonEditorValidationAPI,
+} from '@typejson-editor/editor';
 import { useMount } from 'ahooks';
 import { Button, Form } from 'antd';
 import { useForm } from 'antd/es/form/Form';
@@ -42,13 +49,7 @@ export default function FormItem() {
         onValuesChange={values => {
           console.log('values', values);
         }}
-        initialValues={{
-          json: {
-            source:
-              'NobwRADghgLgFmAXGAlgOwCYFMAeA6GAZzABowBjAezRixqVQFsJKAnGAAhA6g4F8OAM1aVGHAOR4A9LUIxxAbgA6aKmjkdWWQgFcANpwC8XFRzMdZMRBwCMKvsrS4W7DtkFR9nLboMLSYFpQGADyaHoAnkgeeoRYfCTg0PAMlgTEZGq09MjObJxqGrzGNv5kQaHhUYgwrDrxALpAA==',
-            result: { test: 1 },
-          } satisfies TypeJsonEditorFormFieldValue,
-        }}
+        initialValues={{}}
       >
         <Form.Item label="我是表单label" name="json">
           <TypeJsonEditorFormField

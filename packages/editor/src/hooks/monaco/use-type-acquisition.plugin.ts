@@ -35,14 +35,17 @@ export function useTypeAcquisitionMonacoPlugin(
 
   const pluginRef = useRef<ReturnType<typeof setupTypeAcquisition>>();
   const unloadedContentsRef = useRef<string[]>([]);
+  const loadedCodesRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (options.enabled) {
       Promise.resolve()
         .then(() => {
-          const defaultTSCDN = 'https://cdn.jsdelivr.net/npm/typescript@5.6.2/lib/typescript.min.js';
+          const defaultTSCDN =
+            'https://cdn.jsdelivr.net/npm/typescript@5.6.2/lib/typescript.min.js';
           if (!options.ts) return getTypescriptFromCDN(defaultTSCDN);
-          if ('cdn' in options.ts && options.ts.cdn) return getTypescriptFromCDN(options.ts.cdn!);
+          if ('cdn' in options.ts && options.ts.cdn)
+            return getTypescriptFromCDN(options.ts.cdn!);
           return options.ts as Promise<typeof typescript>;
         })
         .then(ts => {
@@ -52,7 +55,10 @@ export function useTypeAcquisitionMonacoPlugin(
             logger: console,
             delegate: {
               receivedFile: (code, path) => {
-                monaco.languages.typescript.typescriptDefaults.addExtraLib(code, `file://${path}`);
+                monaco.languages.typescript.typescriptDefaults.addExtraLib(
+                  code,
+                  `file://${path}`,
+                );
                 const uri = monaco.Uri.file(path);
                 if (monaco.editor.getModel(uri) === null) {
                   modelManager.updateOrAdd({
@@ -85,11 +91,13 @@ export function useTypeAcquisitionMonacoPlugin(
 
   return {
     load(code: string) {
+      if (loadedCodesRef.current.has(code)) return;
       if (!pluginRef.current) {
         unloadedContentsRef.current.push(code);
         return;
       }
 
+      loadedCodesRef.current.add(code);
       pluginRef.current(code);
     },
   };
