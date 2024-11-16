@@ -3,4 +3,4 @@ export type {
   TypeJsonEditorFormFieldProps,
   TypeJsonEditorFormFieldActionAPI,
 } from './types';
-export { default as TypeJsonEditorFormField } from './FormField';
+export { default as TypeJsonEditorFormField } from './components/FormField';

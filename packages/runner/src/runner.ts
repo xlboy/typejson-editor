@@ -78,6 +78,8 @@ export class TypeJsonRunner {
       shell.stdout.on('data', data => {
         if (data.startsWith(configOutputPrefix)) {
           const configStr = data.slice(configOutputPrefix.length).trim();
+          console.log('configStr: ', data);
+
           if (configStr === '') return resolve('');
           if (configStr === 'undefined') return resolve(undefined);
           if (configStr === 'null') return resolve(null);

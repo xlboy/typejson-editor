@@ -25,9 +25,6 @@ export interface TypeJsonEditorFormFieldValue<Result = unknown> {
    * 用户编辑的文件源（压缩格式的 `TypeJsonFile[]`）
    *
    * 存放实际需要编辑的代码内容
-   *
-   * @default
-   * [{ path: '/index.ts', content: '' }]
    */
   source?: CompressedJsonString;
   /**

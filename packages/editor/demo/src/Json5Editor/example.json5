@@ -1,0 +1,31 @@
+{
+  // 单行注释支持
+  // 可以使用单引号或双引号的字符串
+  name: 'John Doe', // 字符串属性不需要引号
+  // 多行注释
+  /*
+    这是一个多行注释
+  */
+  // 支持尾随逗号
+  age: 25, // 最后一个属性后可以有逗号
+  // 支持十六进制
+  hexValue: 0xFF,
+  // 支持数字的正负号
+  temperature: -5,
+  // 支持带小数的数字
+  height: 5.9,
+  // 支持多行字符串
+  description: 'This is a \
+multi-line string.',
+  // 支持对象属性用引号包裹
+  'complex property': {
+    'sub-property': true,
+  },
+  // 属性值可以是 Infinity 和 NaN
+  value: Infinity,
+  notANumber: NaN,
+  // 支持单引号字符串和特殊字符
+  specialChars: 'New\nLine and Tab\tare here',
+  // 支持尾随逗号后省略的结尾
+  isStudent: false, // <- 这里有尾随逗号
+}

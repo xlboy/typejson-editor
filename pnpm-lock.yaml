@@ -110,6 +110,9 @@ importers:
       '@monaco-editor/loader':
         specifier: ^1.4.0
         version: 1.4.0(monaco-editor@0.52.0)
+      '@monaco-editor/react':
+        specifier: ^4.6.0
+        version: 4.6.0(monaco-editor@0.52.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@phoenix-twind/preset-tailwind':
         specifier: '*'
         version: 1.2.0-alpha.1(@twind/core@1.1.3(typescript@5.6.2))(typescript@5.6.2)
@@ -805,6 +808,13 @@ packages:
     resolution: {integrity: sha512-00ioBig0x642hytVspPl7DbQyaSWRaolYie/UFNjoTdvoKPzo6xrXLhTk9ixgIKcLH5b5vDOjVNiGyY+uDCUlg==}
     peerDependencies:
       monaco-editor: '>= 0.21.0 < 1'
+
+  '@monaco-editor/react@4.6.0':
+    resolution: {integrity: sha512-RFkU9/i7cN2bsq/iTkurMWOEErmYcY6JiQI3Jn+WeR/FGISH8JbHERjpS9oRuSOPvDMJI0Z8nJeKkbOs9sBYQw==}
+    peerDependencies:
+      monaco-editor: '>= 0.25.0 < 1'
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
 
   '@phoenix-twind/preset-tailwind@1.2.0-alpha.1':
     resolution: {integrity: sha512-JW1i8ljWzhMA5zeJ4taEOGtpRAjUU4w32x6CcdHg9y8pNcStP5oGj/6gmbxlMvan3ZXP3/i/bgOKtXu17DbAeg==}
@@ -3111,6 +3121,13 @@ snapshots:
     dependencies:
       monaco-editor: 0.52.0
       state-local: 1.0.7
+
+  '@monaco-editor/react@4.6.0(monaco-editor@0.52.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@monaco-editor/loader': 1.4.0(monaco-editor@0.52.0)
+      monaco-editor: 0.52.0
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   '@phoenix-twind/preset-tailwind@1.2.0-alpha.1(@twind/core@1.1.3(typescript@5.6.2))(typescript@5.6.2)':
     dependencies:

@@ -1,5 +1,6 @@
 {
   "twind-intellisense.presets": [
     "phoenix-tailwind@3.4"
-  ]
+  ],
+  "vitest.disableWorkspaceWarning": true
 }

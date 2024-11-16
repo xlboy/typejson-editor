@@ -1,33 +1,24 @@
 import {
   TypeJsonEditor,
   TypeJsonEditorFileAPI,
-  TypeJsonEditorProps,
   TypeJsonEditorValidationAPI,
   TypeJsonFile,
-} from '../../editor/src';
-import { TypeJsonRunner } from '../../runner/src';
-import FloatMenu, { FloatMenuProps } from './components/FloatMenu';
+} from '../../../editor/src';
+import { TypeJsonRunner } from '../../../runner/src';
 import type {
   TypeJsonEditorFormFieldActionAPI,
   TypeJsonEditorFormFieldProps,
   TypeJsonEditorFormFieldValue,
   ValidationDetails,
-} from './types';
-import { lzJsonCompressor } from './utils/lz-json-compressor';
-import { apply, css, tx } from './utils/twind';
-import { AppstoreOutlined, CloseOutlined } from '@ant-design/icons';
+} from '../types';
+import { lzJsonCompressor } from '../utils/lz-json-compressor';
+import { apply, tx } from '../utils/twind';
+import FloatMenu, { FloatMenuProps } from './FloatMenu';
+import { CloseOutlined } from '@ant-design/icons';
 import { useEventListener, useMap, useSet } from 'ahooks';
-import { Dropdown, Modal } from 'antd';
+import { Modal } from 'antd';
 import type * as Monaco from 'monaco-editor';
-import {
-  memo,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
@@ -79,27 +70,27 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
           displayErrorActions.set('warning:running', {});
           throw new Error('Running');
         }
-        const { typeErrors, syntacticErrors } =
-          await editorValidationRef.current!.getErrors();
-        if (typeErrors.length > 0) {
-          displayErrorActions.set('error:type-check-failure', {
-            errors: typeErrors.map(v => `${v.messageText} (${v.lineNumber}:${v.column})`),
-          });
-          throw new Error('Type check failure');
-        }
+        // const { typeErrors, syntacticErrors } =
+        //   await editorValidationRef.current!.getErrors();
+        // if (typeErrors.length > 0) {
+        //   displayErrorActions.set('error:type-check-failure', {
+        //     errors: typeErrors.map(v => `${v.messageText} (${v.lineNumber}:${v.column})`),
+        //   });
+        //   throw new Error('Type check failure');
+        // }
 
-        displayErrorActions.remove('error:type-check-failure');
+        // displayErrorActions.remove('error:type-check-failure');
 
-        if (syntacticErrors.length > 0) {
-          displayErrorActions.set('error:syntactic-check-failure', {
-            errors: syntacticErrors.map(
-              v => `${v.messageText} (${v.lineNumber}:${v.column})`,
-            ),
-          });
-          throw new Error('Syntactic check failure');
-        }
+        // if (syntacticErrors.length > 0) {
+        //   displayErrorActions.set('error:syntactic-check-failure', {
+        //     errors: syntacticErrors.map(
+        //       v => `${v.messageText} (${v.lineNumber}:${v.column})`,
+        //     ),
+        //   });
+        //   throw new Error('Syntactic check failure');
+        // }
 
-        displayErrorActions.remove('error:syntactic-check-failure');
+        // displayErrorActions.remove('error:syntactic-check-failure');
 
         setRunning(true);
         loadingTextActions.add('Running...');
@@ -125,9 +116,12 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
             result,
           };
         } catch (err) {
-          const error = err instanceof Error ? err : new Error(JSON.stringify(err));
+          const error =
+            err instanceof Error
+              ? err
+              : new Error(typeof err === 'object' ? JSON.stringify(err) : String(err));
           displayErrorActions.set('error:run-failure', { error });
-          throw err;
+          throw error;
         } finally {
           displayErrorActions.remove('warning:running');
           const diff = Date.now() - startTime;
@@ -292,12 +286,19 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
 
       return (
         <div
-          className={tx`border(2 solid [#f56c6c]) rounded-[6px] p-3 pb-0 absolute bottom-0 w-full text-[#f56c6c] bg-[#2b1d1d] max-h-[100px] overflow-y-auto`}
+          className={tx(
+            apply.alert(
+              'border(2 solid [#f56c6c]) rounded-[6px] p-3 pb-0 absolute bottom-0',
+              'w-full text-[#f56c6c] bg-[#2b1d1d] max-h-[100px] overflow-y-auto box-border',
+            ),
+          )}
         >
           {errors.map(error => (
-            <div key={error} className={tx`pb-3`}>
-              {error}
-            </div>
+            <div
+              key={error}
+              className={tx`pb-3 m-0 whitespace-pre-wrap break-all`}
+              dangerouslySetInnerHTML={{ __html: error.replace(/\\n/g, '<br />') }}
+            />
           ))}
         </div>
       );
@@ -330,7 +331,7 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
         return (
           <div
             className={tx(
-              apply.bg`fixed inset-0 z-50 backdrop-blur-[4px] bg-black/30 flex items-center justify-center`,
+              apply.bg`fixed inset-0 z-[1000] backdrop-blur-[4px] bg-black/30 flex items-center justify-center`,
             )}
           >
             <div
