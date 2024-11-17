@@ -1,7 +1,6 @@
 import { convertToJs, parseImports } from './helpers';
 import type { TypeJsonFile, TypeJsonRunnerOptions } from './types';
 import { Nodebox } from '@codesandbox/nodebox';
-import { merge } from 'lodash-es';
 import type { PackageJson } from 'type-fest';
 
 export class TypeJsonRunner {
@@ -14,12 +13,10 @@ export class TypeJsonRunner {
   };
 
   constructor(_options?: Partial<TypeJsonRunnerOptions>) {
-    this.options = merge(
-      {
-        nodeboxIframeId: 'type-json-editor-nodebox-iframe',
-      } satisfies Partial<TypeJsonRunnerOptions>,
-      _options,
-    ) as any;
+    this.options = {
+      nodeboxIframeId: 'type-json-editor-nodebox-iframe',
+      ..._options,
+    } as Required<TypeJsonRunnerOptions>;
   }
 
   async setFiles(files: Array<TypeJsonFile>) {
@@ -78,14 +75,11 @@ export class TypeJsonRunner {
       shell.stdout.on('data', data => {
         if (data.startsWith(configOutputPrefix)) {
           const configStr = data.slice(configOutputPrefix.length).trim();
-          console.log('configStr: ', data);
 
           if (configStr === '') return resolve('');
           if (configStr === 'undefined') return resolve(undefined);
           if (configStr === 'null') return resolve(null);
           resolve(JSON.parse(configStr));
-        } else {
-          console.log('TypeJson Runner Output:', data);
         }
       });
       shell.stderr.on('data', data => {

@@ -1,21 +1,21 @@
-import {
-  TypeJsonEditor,
-  TypeJsonEditorFileAPI,
-  TypeJsonEditorValidationAPI,
-  TypeJsonFile,
-} from '../../../editor/src';
-import { TypeJsonRunner } from '../../../runner/src';
+import useValidationError from '../hooks/use-validation-error';
 import type {
   TypeJsonEditorFormFieldActionAPI,
   TypeJsonEditorFormFieldProps,
   TypeJsonEditorFormFieldValue,
-  ValidationDetails,
 } from '../types';
 import { lzJsonCompressor } from '../utils/lz-json-compressor';
 import { apply, tx } from '../utils/twind';
 import FloatMenu, { FloatMenuProps } from './FloatMenu';
 import { CloseOutlined } from '@ant-design/icons';
-import { useEventListener, useMap, useSet } from 'ahooks';
+import {
+  TypeJsonEditor,
+  TypeJsonEditorFileAPI,
+  TypeJsonEditorValidationAPI,
+  TypeJsonFile,
+} from '@typejson-editor/editor';
+import { TypeJsonRunner } from '@typejson-editor/runner';
+import { useDebounceFn, useEventListener, useSet } from 'ahooks';
 import { Modal } from 'antd';
 import type * as Monaco from 'monaco-editor';
 import { memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
@@ -40,7 +40,8 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
   const defaultActionRef = useRef<TypeJsonEditorFormFieldActionAPI>(null);
   const actionRef = props.actionRef || defaultActionRef;
 
-  const lastActiveFileRef = useRef<string>('index.ts');
+  const lastActiveFileRef = useRef('index.ts');
+  const lastRunResultSnapshotRef = useRef<typeof value>();
 
   const [isFullScreen, setIsFullScreen] = useState(false);
 
@@ -49,11 +50,15 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
     'Running...' | 'Runner initializing...'
   >();
 
-  type DisplayError = ValidationDetails & { type: `${string}:${string}` };
-  const [displayErrorMap, displayErrorActions] = useMap<
-    DisplayError['type'],
-    Omit<DisplayError, 'type'>
-  >();
+  const validationError = useValidationError();
+  const debouncedTriggerChange = useDebounceFn(triggerChange, {
+    wait: 500,
+    leading: true,
+  });
+  const debouncedRefreshTypeOrSyntacticErrors = useDebounceFn(
+    refreshTypeOrSyntacticErrors,
+    { wait: 300, leading: true },
+  );
 
   const originPresetFiles = useMemo(
     () =>
@@ -67,63 +72,51 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
       async run<Result = unknown>() {
         if (!runnerRef.current) throw new Error('Runner not initialized');
         if (running) {
-          displayErrorActions.set('warning:running', {});
+          validationError.set('warning:running');
           throw new Error('Running');
         }
-        // const { typeErrors, syntacticErrors } =
-        //   await editorValidationRef.current!.getErrors();
-        // if (typeErrors.length > 0) {
-        //   displayErrorActions.set('error:type-check-failure', {
-        //     errors: typeErrors.map(v => `${v.messageText} (${v.lineNumber}:${v.column})`),
-        //   });
-        //   throw new Error('Type check failure');
-        // }
 
-        // displayErrorActions.remove('error:type-check-failure');
+        await refreshTypeOrSyntacticErrors();
+        if (
+          validationError.has('error:syntactic-check-failure') ||
+          validationError.has('error:type-check-failure')
+        ) {
+          throw new Error('Type or syntactic check failure');
+        }
 
-        // if (syntacticErrors.length > 0) {
-        //   displayErrorActions.set('error:syntactic-check-failure', {
-        //     errors: syntacticErrors.map(
-        //       v => `${v.messageText} (${v.lineNumber}:${v.column})`,
-        //     ),
-        //   });
-        //   throw new Error('Syntactic check failure');
-        // }
-
-        // displayErrorActions.remove('error:syntactic-check-failure');
-
-        setRunning(true);
-        loadingTextActions.add('Running...');
         const startTime = Date.now();
         try {
+          setRunning(true);
+          loadingTextActions.add('Running...');
           const files = editorFileRef
             .current!.getAll()
             .map(v => v[0])
             .filter(v => !v.isExternal);
-          const result = (await runnerRef.current.run({ files })) as Result;
+          const runResult = (await runnerRef.current.run({ files })) as Result;
           const presetFiles = files.filter(v =>
             originPresetFiles.some(p => p.path === v.path),
           );
           const sourceFiles = files.filter(
             v => !originPresetFiles.some(p => p.path === v.path),
           );
-          displayErrorActions.remove('error:run-failure');
-          return {
+          validationError.remove('error:run-failure');
+          lastRunResultSnapshotRef.current = {
             source: lzJsonCompressor.compress<TypeJsonFile[]>(sourceFiles),
             preset: presetFiles.length
               ? lzJsonCompressor.compress<TypeJsonFile[]>(presetFiles)
               : undefined,
-            result,
+            result: runResult,
           };
+          return lastRunResultSnapshotRef.current as TypeJsonEditorFormFieldValue<Result>;
         } catch (err) {
           const error =
             err instanceof Error
               ? err
               : new Error(typeof err === 'object' ? JSON.stringify(err) : String(err));
-          displayErrorActions.set('error:run-failure', { error });
+          validationError.set('error:run-failure', { error });
           throw error;
         } finally {
-          displayErrorActions.remove('warning:running');
+          validationError.remove('warning:running');
           const diff = Date.now() - startTime;
           const reset = () => {
             setRunning(false);
@@ -140,44 +133,17 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
         return (await actionRef.current!.validateDetailed()).type === 'success';
       },
       async validateDetailed() {
-        if (running) {
-          displayErrorActions.set('warning:running', {});
-          return { type: 'warning:running' };
-        }
+        if (running) validationError.set('warning:running');
 
-        try {
-          await actionRef.current!.run();
-        } catch (_) {
-        } finally {
-          if (displayErrorMap.has('error:run-failure')) {
-            return {
-              type: 'error:run-failure',
-              ...(displayErrorMap.get('error:run-failure')! as { error: Error }),
-            };
-          }
-        }
+        const isSnapshotOutdated =
+          !lastRunResultSnapshotRef.current ||
+          JSON.stringify(value) !== JSON.stringify(lastRunResultSnapshotRef.current);
+        if (isSnapshotOutdated) await triggerChange();
 
-        const { typeErrors, syntacticErrors } =
-          await editorValidationRef.current!.getErrors();
-        if (typeErrors.length > 0) {
-          return {
-            type: 'error:type-check-failure',
-            errors: typeErrors.map(v => `${v.messageText} (${v.lineNumber}:${v.column})`),
-          };
-        }
-        if (syntacticErrors.length > 0) {
-          return {
-            type: 'error:syntactic-check-failure',
-            errors: syntacticErrors.map(
-              v => `${v.messageText} (${v.lineNumber}:${v.column})`,
-            ),
-          };
-        }
-
-        return { type: 'success' };
+        return validationError.getFirst() || { type: 'success' };
       },
     }),
-    [running, originPresetFiles],
+    [value, running, originPresetFiles],
   );
 
   useEventListener(
@@ -211,11 +177,6 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
     if (isInitialized) {
       editorFileRef.current?.updateOrAddMultiple(sourceFiles);
       editorFileRef.current?.updateOrAddMultiple(presetFiles);
-      if (lastActiveFileRef.current) {
-        const activeFile = editorFileRef.current?.getActive()?.[0];
-        if (activeFile && activeFile.path !== lastActiveFileRef.current) {
-        }
-      }
     } else {
       editorFileRef.current?.updateOrAddMultiple(sourceFiles);
       editorFileRef.current?.updateOrAddMultiple(presetFiles);
@@ -227,7 +188,7 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
       runner
         .init()
         .catch(error => {
-          displayErrorActions.set('error:runner-init-failure', { error });
+          validationError.set('error:runner-init-failure', { error });
         })
         .finally(() => {
           loadingTextActions.remove('Runner initializing...');
@@ -267,19 +228,20 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
 
   const renderer = {
     alert() {
-      const errors = [...displayErrorMap.entries()]
-        .map(([type, info]) => {
-          switch (type) {
+      const errors = validationError
+        .getAll()
+        .map(error => {
+          switch (error.type) {
             case 'warning:running':
               return 'running, please wait...';
             case 'error:runner-init-failure':
             case 'error:run-failure':
-              const error = (info as any).error as Error;
-              return error.message;
+              return error.error.message;
             case 'error:syntactic-check-failure':
             case 'error:type-check-failure':
-              const errors = (info as any).errors as string[];
-              return errors;
+              return error.errors;
+            default:
+              throw new Error(`Unknown error type: ${error}`);
           }
         })
         .flat(1);
@@ -319,7 +281,7 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
             onActiveFileChange={path => (lastActiveFileRef.current = path)}
             onCreated={onEditorCreated}
           />
-          {displayErrorMap.size > 0 && renderer.alert()}
+          {validationError.getAll().length > 0 && renderer.alert()}
           <FloatMenu
             loadingText={loadingTextSet.values().next().value}
             menuItems={floatMenuItems}
@@ -342,7 +304,7 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
               {editorJsx}
               <CloseOutlined
                 className={tx(
-                  apply.cursor`absolute right-[20px] top-[20px] cursor-pointer text([18px] white) transition-all hover:scale-110`,
+                  apply.closeIcon`absolute z-50 right-[20px] top-[20px] cursor-pointer text([18px] white) transition-all hover:scale-110`,
                 )}
                 onClick={() => setIsFullScreen(false)}
               />
@@ -367,21 +329,55 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
     if (lastActiveModel) editor.setModel(lastActiveModel);
   }
 
-  async function triggerChange(changedValue?: TypeJsonEditorFormFieldValue) {
-    if (!runnerRef.current) return;
+  async function triggerChange(
+    changedValue?: TypeJsonEditorFormFieldValue,
+  ): Promise<boolean> {
+    if (!runnerRef.current) return false;
 
     try {
       changedValue ||= await actionRef.current!.run();
       onChange?.(changedValue);
+      return true;
     } catch (error) {
       console.error('run error', error);
+      return false;
     }
   }
 
   function onActiveFileContentChange(path: string, content: string) {
-    if (onChangeMode === 'change') triggerChange();
+    if (onChangeMode === 'change') debouncedTriggerChange.run();
+    else if (
+      validationError.has('error:type-check-failure') ||
+      validationError.has('error:syntactic-check-failure')
+    ) {
+      debouncedRefreshTypeOrSyntacticErrors.run();
+    }
+
     editorProps.onActiveFileContentChange?.(path, content);
   }
+
+  async function refreshTypeOrSyntacticErrors() {
+    const { typeErrors, syntacticErrors } =
+      await editorValidationRef.current!.getErrors();
+    if (typeErrors.length > 0) {
+      validationError.set('error:type-check-failure', {
+        errors: typeErrors.map(v => `${v.messageText} (${v.lineNumber}:${v.column})`),
+      });
+    } else {
+      validationError.remove('error:type-check-failure');
+    }
+
+    if (syntacticErrors.length > 0) {
+      validationError.set('error:syntactic-check-failure', {
+        errors: syntacticErrors.map(
+          v => `${v.messageText} (${v.lineNumber}:${v.column})`,
+        ),
+      });
+    } else {
+      validationError.remove('error:syntactic-check-failure');
+    }
+  }
+
   function handleUpdatePreset() {
     const preset = prompt('Please Input Preset: ');
     if (preset) onChange?.({ ...value, preset });
@@ -399,7 +395,8 @@ function TypeJsonEditorFormField(props: TypeJsonEditorFormFieldProps) {
   async function handleViewResult() {
     try {
       const changedValue = await actionRef.current!.run();
-      triggerChange(changedValue);
+      if (!(await triggerChange(changedValue))) return;
+
       const viewId = `view-result-${Math.random().toString(36).slice(2, 11)}`;
       Modal.info({
         title: 'Result',

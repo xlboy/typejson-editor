@@ -1,6 +1,6 @@
 {
   "name": "@typejson-editor/editor",
-  "version": "0.1.0-alpha.3",
+  "version": "0.1.0-alpha.4",
   "description": "TypeJSON Editor",
   "type": "module",
   "main": "./dist/index.cjs",

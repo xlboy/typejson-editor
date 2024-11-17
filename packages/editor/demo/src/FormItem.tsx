@@ -1,3 +1,8 @@
+import {
+  TypeJsonEditor,
+  type TypeJsonEditorFileAPI,
+  type TypeJsonEditorValidationAPI,
+} from '../../../editor/src';
 import { TypeJsonEditorFormField } from '../../../form-field/src';
 import {
   TypeJsonEditorFormFieldActionAPI,
@@ -6,11 +11,6 @@ import {
 import { TypeJsonRunner } from '../../../runner/src';
 import loader from '@monaco-editor/loader';
 import { tx } from '@twind/core';
-import {
-  TypeJsonEditor,
-  type TypeJsonEditorFileAPI,
-  type TypeJsonEditorValidationAPI,
-} from '@typejson-editor/editor';
 import { useMount } from 'ahooks';
 import { Button, Form } from 'antd';
 import { useForm } from 'antd/es/form/Form';

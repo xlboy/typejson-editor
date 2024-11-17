@@ -62,6 +62,8 @@ export type ValidationDetails =
   | { type: 'error:type-check-failure'; errors: string[] }
   | { type: 'error:syntactic-check-failure'; errors: string[] };
 
+export type ValidationError = ValidationDetails & { type: `${string}:${string}` };
+
 export interface TypeJsonEditorFormFieldActionAPI {
   run<Result = unknown>(): Promise<TypeJsonEditorFormFieldValue<Result>>;
   validate(): Promise<boolean>;

@@ -89,18 +89,18 @@ export function useTypeAcquisitionMonacoPlugin(
     }
   }, []);
 
-  return {
-    load(code: string) {
-      if (loadedCodesRef.current.has(code)) return;
-      if (!pluginRef.current) {
-        unloadedContentsRef.current.push(code);
-        return;
-      }
+  const load = (code: string) => {
+    if (loadedCodesRef.current.has(code)) return;
+    if (!pluginRef.current) {
+      unloadedContentsRef.current.push(code);
+      return;
+    }
 
-      loadedCodesRef.current.add(code);
-      pluginRef.current(code);
-    },
+    loadedCodesRef.current.add(code);
+    pluginRef.current(code);
   };
+
+  return { load };
 
   function getTypescriptFromCDN(url: string): Promise<typeof typescript> {
     return new Promise((resolve, reject) => {

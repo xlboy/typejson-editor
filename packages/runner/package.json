@@ -1,14 +1,39 @@
 {
   "name": "@typejson-editor/runner",
-  "version": "0.1.0-alpha.1",
-  "description": "TypeJSON Runner",
-  "type": "module",
-  "main": "./src/index.ts",
-  "scripts": {},
+  "version": "0.1.1",
+  "description": "A browser-based TypeScript runner for instant code execution",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xlboy/typejson-editor"
+  },
+  "homepage": "https://github.com/xlboy/typejson-editor/tree/master/packages/runner",
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "browser-runtime",
+    "typescript-runner",
+    "sandpack-nodebox"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "build": "vite build"
+  },
   "devDependencies": {
     "@codesandbox/nodebox": "^0.1.9",
     "es-module-lexer": "^1.5.4",
-    "nodebox": "^0.0.1",
     "sucrase": "^3.35.0"
   }
 }

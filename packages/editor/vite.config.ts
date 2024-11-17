@@ -1,6 +1,5 @@
 import pkgJSON from './package.json';
 import react from '@vitejs/plugin-react';
-import fs from 'fs-extra';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 

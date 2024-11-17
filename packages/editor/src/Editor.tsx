@@ -45,10 +45,7 @@ function TypeJsonEditor(props: TypeJsonEditorProps) {
   const validationRef = props.validationRef || defaultValidationRef;
   useExposeValidationAPI(validationRef, { monaco, modelManager });
 
-  const debouncedLoadTypeLib = useDebounceCallback(
-    (code: string) => loadTypeLib(code),
-    500,
-  );
+  const debouncedLoadTypeLib = useDebounceCallback(loadTypeLib, 500);
 
   useEffect(() => {
     if (mountedDOMRef.current) {
@@ -129,7 +126,7 @@ function TypeJsonEditor(props: TypeJsonEditorProps) {
         }),
         monaco.editor.onDidCreateModel(model => {
           if (props.plugins?.typeAcquisition?.enabled) {
-            debouncedLoadTypeLib(model.getValue());
+            if (!model.metadata?.isExternal) loadTypeLib(model.getValue());
           }
         }),
       ];

@@ -52,7 +52,10 @@ export interface TypeJsonEditorFileAPI {
   clear: () => void;
 }
 
-export type Diagnostic = Monaco.languages.typescript.Diagnostic & { lineNumber: number; column: number };
+export type Diagnostic = Monaco.languages.typescript.Diagnostic & {
+  lineNumber: number;
+  column: number;
+};
 
 export interface TypeJsonEditorValidationAPI {
   hasErrors: () => Promise<boolean>;
